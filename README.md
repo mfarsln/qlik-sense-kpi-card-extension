@@ -30,7 +30,7 @@ Modern and responsive KPI card extension with sparkline trend charts for Qlik Se
 
 ## 📋 Requirements
 
-- Qlik Sense Desktop or Server
+- Qlik Sense Enterprise, Qlik Cloud
 - 1 Date Dimension
 - 1 Measure
 
@@ -189,4 +189,5 @@ You can use GitHub Issues for your questions.
 ---
 
 ⭐ If you liked this extension, don't forget to give it a star!
+
 
