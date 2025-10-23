@@ -43,9 +43,9 @@ Download this repository as ZIP or clone it with `git clone`.
 
 ### 2. Install to Qlik Sense
 
-#### For Qlik Sense Desktop:
-1. Open Qlik Sense Desktop
-2. Go to **File** → **Import** → **Extension**
+#### For Qlik Cloud:
+1. Go to **Administration** → **Extensions**
+2. Click the **Import** button
 3. Select the downloaded folder
 4. Extension will be installed and ready to use
 
@@ -189,5 +189,6 @@ You can use GitHub Issues for your questions.
 ---
 
 ⭐ If you liked this extension, don't forget to give it a star!
+
 
 
