@@ -1,0 +1,8 @@
+{
+	"name": "KPI Card",
+	"description": "Single-measure KPI with embedded sparkline trend",
+	"type": "visualization",
+	"version": "1.0.0",
+	"author": "f.arslan",
+	"icon": "extension"
+}

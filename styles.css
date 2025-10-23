@@ -1,0 +1,251 @@
+/* KPI Card Extension Styles - Optimized */
+
+/* Base card styles */
+.kpi-card {
+	width: 100%;
+	height: 100%;
+	color: inherit;
+	border: none !important;
+	outline: none !important;
+	box-shadow: none !important;
+}
+
+/* Override Qlik theme borders - consolidated selectors */
+.kpi-card *,
+.qv-object.kpi-card,
+.qv-object .kpi-card,
+[data-qv-object="kpi-card"],
+.qv-object,
+.qv-object-container,
+.qv-object-content,
+.qv-object-body,
+.lv-object,
+.lv-object-container,
+.lv-object-content,
+[class*="theme"] .kpi-card,
+[class*="theme"] .kpi-card * {
+	border: none !important;
+	outline: none !important;
+	box-shadow: none !important;
+}
+
+/* Specific Qlik object overrides */
+.qv-object[data-qv-object="kpi-card"],
+.qv-object[data-qv-object="kpi-card"] *,
+.qv-object[data-qv-object="kpi-card"] .qv-object-content,
+.qv-object[data-qv-object="kpi-card"] .qv-object-body,
+.lv-object[data-qv-object="kpi-card"],
+.lv-object[data-qv-object="kpi-card"] *,
+.lv-object[data-qv-object="kpi-card"] .lv-object-content {
+	background: transparent !important;
+}
+
+/* Card sections */
+.kpi-card__kpi-section {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: flex-start;
+	position: relative;
+}
+
+.kpi-card__trend-section {
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
+	position: relative;
+}
+
+/* Title styles */
+.kpi-card__title {
+	opacity: 0.8;
+}
+
+/* Value styles */
+.kpi-card__value {
+	font-weight: 600;
+	line-height: 1.2;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.kpi-card__value:hover {
+	transform: scale(1.05);
+}
+
+/* Sparkline styles */
+.kpi-card__sparkline {
+	height: 100%;
+	width: 100%;
+	min-height: 120px;
+}
+
+.kpi-card__sparkline-inner {
+	width: 100%;
+	height: 100%;
+	color: currentColor;
+}
+
+.kpi-card__sparkline-inner svg path {
+	transition: stroke-width 0.2s ease;
+}
+
+.kpi-card__sparkline:hover .kpi-card__sparkline-inner svg path {
+	transition: stroke-width 0.2s ease;
+}
+
+/* Labels */
+.kpi-card__labels {
+	display: flex;
+	justify-content: space-between;
+	opacity: 0.8;
+}
+
+/* Empty state */
+.kpi-card--empty {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 100%;
+	opacity: 0.7;
+	font-size: calc(0.8vw + 0.5vh + 8px);
+	padding: calc(0.5vw + 0.5vh + 4px);
+	text-align: center;
+}
+
+/* Pulse animation for min/max markers */
+.kpi-pulse {
+	animation: kpi-pulse 1.6s infinite ease-in-out;
+}
+
+@keyframes kpi-pulse {
+	0% { opacity: 0.9; }
+	50% { opacity: 0.35; }
+	100% { opacity: 0.9; }
+}
+
+/* Legacy pulse animation for backward compatibility */
+.kpi-card__pulse-point {
+	animation: pulse 2s infinite;
+	stroke: white;
+	stroke-width: 0.5;
+}
+
+@keyframes pulse {
+	0% { transform: scale(1); opacity: 1; }
+	50% { transform: scale(1.3); opacity: 0.8; }
+	100% { transform: scale(1); opacity: 1; }
+}
+
+/* Counter animation */
+@keyframes counterAppear {
+	0% { 
+		opacity: 0; 
+		transform: scale(0.8) translateY(10px); 
+	}
+	100% { 
+		opacity: 1; 
+		transform: scale(1) translateY(0); 
+	}
+}
+
+.kpi-card__value--animating {
+	animation: counterAppear 0.6s ease-out forwards;
+}
+
+/* Delta animation */
+.kpi-card__delta {
+	transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.kpi-card__delta--animating {
+	animation: deltaSlideIn 0.6s ease-out forwards;
+}
+
+@keyframes deltaSlideIn {
+	0% { 
+		opacity: 0; 
+		transform: translateX(-10px); 
+	}
+	100% { 
+		opacity: 1; 
+		transform: translateX(0); 
+	}
+}
+
+/* Quick buttons */
+.kpi-card__quick-buttons {
+	opacity: 0.8;
+	transition: opacity 0.2s ease;
+}
+
+.kpi-card__quick-buttons:hover {
+	opacity: 1;
+}
+
+.kpi-card__quick-btn {
+	transition: all 0.2s ease;
+}
+
+.kpi-card__quick-btn:hover {
+	background: rgba(255,255,255,0.2) !important;
+	transform: translateY(-1px);
+}
+
+.kpi-card__quick-btn.active {
+	background: var(--active-color, rgba(255,255,255,0.3)) !important;
+	box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+	color: var(--active-label-color, #ffffff) !important;
+}
+
+/* Button style variants */
+.kpi-card__quick-btn--minimal:hover {
+	background: rgba(255,255,255,0.1) !important;
+}
+
+.kpi-card__quick-btn--pill:hover {
+	background: rgba(255,255,255,0.2) !important;
+}
+
+/* Dark mode styles */
+.kpi-card--dark {
+	background: #1a1a1a !important;
+	color: #ffffff !important;
+}
+
+.kpi-card--dark .kpi-card__title {
+	color: #e5e5e5 !important;
+}
+
+.kpi-card--dark .kpi-card__value {
+	color: #ffffff !important;
+}
+
+.kpi-card--dark .kpi-card__labels {
+	color: #a3a3a3 !important;
+}
+
+.kpi-card--dark .kpi-card__measure-label {
+	color: #d4d4d4 !important;
+}
+
+.kpi-card--dark .kpi-card__delta {
+	color: inherit !important;
+}
+
+.kpi-card--dark .kpi-card__quick-btn {
+	background: rgba(255,255,255,0.1) !important;
+	color: #ffffff !important;
+	border-color: rgba(255,255,255,0.2) !important;
+}
+
+.kpi-card--dark .kpi-card__quick-btn:hover {
+	background: rgba(255,255,255,0.2) !important;
+}
+
+.kpi-card--dark .kpi-card__quick-btn.active {
+	background: var(--active-color, rgba(255,255,255,0.3)) !important;
+	color: var(--active-label-color, #ffffff) !important;
+}
