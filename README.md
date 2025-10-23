@@ -7,7 +7,11 @@ Modern and responsive KPI card extension with sparkline trend charts for Qlik Se
 ### KPI Card
 ![Basic KPI Card](https://imagedelivery.net/BdpL1pNKEf9FjxHkN-wXKg/b1e3c69d-7beb-48cb-3652-8762c9110600/public)
 
-![Basic KPI Card](https://imagedelivery.net/BdpL1pNKEf9FjxHkN-wXKg/53039c31-9f21-4ce6-fbd8-c3c059d36400/public)
+![Basic KPI Card](https://imagedelivery.net/BdpL1pNKEf9FjxHkN-wXKg/dae0ddf1-6570-416c-ecdf-eef885423600/public)
+
+![Basic KPI Card](https://imagedelivery.net/BdpL1pNKEf9FjxHkN-wXKg/459b324d-5933-4d6a-2e28-585c2d5d7000/public)
+
+
 *Basic KPI card with sparkline trend*
 
 
@@ -185,3 +189,4 @@ You can use GitHub Issues for your questions.
 ---
 
 ⭐ If you liked this extension, don't forget to give it a star!
+
