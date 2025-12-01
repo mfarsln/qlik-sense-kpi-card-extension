@@ -131,6 +131,240 @@ define([
 		SPARKLINE_CLASS: 'kpi-card__sparkline'
 	};
 
+const EMOJI_ICON_MAP = {
+	'trending-up': '↗',
+	'trending-down': '↘',
+	'chart': '📊',
+	'target': '🎯',
+	'star': '⭐',
+	'fire': '🔥',
+	'diamond': '💎',
+	'trophy': '🏆',
+	'money': '💰',
+	'dollar': '💵',
+	'euro': '💶',
+	'yen': '💴',
+	'pound': '💷',
+	'bank': '🏦',
+	'credit-card': '💳',
+	'wallet': '👛',
+	'coins': '🪙',
+	'growth': '📈',
+	'decline': '📉',
+	'profit': '💹',
+	'loss': '📉',
+	'sales': '🛒',
+	'revenue': '💼'
+};
+
+const MODERN_ICON_MAP = {
+	'trend-up': {
+		viewBox: '0 0 24 24',
+		paths: [
+			'M3 17l6-6 4 4 8-8',
+			'M21 10v6h-6'
+		]
+	},
+	'trend-down': {
+		viewBox: '0 0 24 24',
+		paths: [
+			'M3 7l6 6 4-4 8 8',
+			'M21 14v-6h-6'
+		]
+	},
+	'bar-chart': {
+		viewBox: '0 0 24 24',
+		paths: [
+			'M3 3v18',
+			'M3 17h18',
+			'M7 10v7',
+			'M12 4v13',
+			'M17 7v10'
+		]
+	},
+	'pie-chart': {
+		viewBox: '0 0 24 24',
+		paths: [
+			'M21.21 15.89A10 10 0 1 1 8.11 2.79',
+			'M22 12A10 10 0 0 0 12 2v10z'
+		]
+	},
+	'shield-dollar': {
+		viewBox: '0 0 24 24',
+		paths: [
+			'M12 2l7 4v5c0 5-3.5 9.5-7 11-3.5-1.5-7-6-7-11V6z',
+			'M12 8v8',
+			'M9.5 11h5'
+		]
+	},
+	'wallet-card': {
+		viewBox: '0 0 24 24',
+		paths: [
+			'M3 7h18v10H3z',
+			'M16 3h-8a3 3 0 0 0-3 3v1',
+			'M21 12h-4',
+			'M17 12v4'
+		]
+	}
+};
+
+const EMOJI_ICON_OPTIONS = [
+	{ value: 'trending-up', label: 'Trending Up' },
+	{ value: 'trending-down', label: 'Trending Down' },
+	{ value: 'chart', label: 'Chart' },
+	{ value: 'target', label: 'Target' },
+	{ value: 'star', label: 'Star' },
+	{ value: 'fire', label: 'Fire' },
+	{ value: 'diamond', label: 'Diamond' },
+	{ value: 'trophy', label: 'Trophy' },
+	{ value: 'money', label: 'Money Bag' },
+	{ value: 'wallet', label: 'Wallet' },
+	{ value: 'coins', label: 'Coins' },
+	{ value: 'growth', label: 'Growth' },
+	{ value: 'decline', label: 'Decline' },
+	{ value: 'profit', label: 'Profit' },
+	{ value: 'sales', label: 'Sales Cart' },
+	{ value: 'revenue', label: 'Briefcase' }
+];
+
+const MODERN_ICON_OPTIONS = [
+	{ value: 'trend-up', label: 'Trend Up' },
+	{ value: 'trend-down', label: 'Trend Down' },
+	{ value: 'bar-chart', label: 'Bar Chart' },
+	{ value: 'pie-chart', label: 'Pie Chart' },
+	{ value: 'shield-dollar', label: 'Shield Dollar' },
+	{ value: 'wallet-card', label: 'Wallet Card' }
+];
+
+const GRADIENT_PRESETS = [
+	{ value: 'custom', label: 'Custom (manual)' },
+	{ value: 'sunrise', label: 'Sunrise Glow', start: '#ff9a9e', end: '#fad0c4', direction: 'diagonal' },
+	{ value: 'ocean', label: 'Ocean Deep', start: '#2193b0', end: '#6dd5ed', direction: 'vertical' },
+	{ value: 'forest', label: 'Forest Haze', start: '#a8e063', end: '#56ab2f', direction: 'diagonal' },
+	{ value: 'dusk', label: 'Dusk Purple', start: '#614385', end: '#516395', direction: 'horizontal' },
+	{ value: 'lava', label: 'Lava Heat', start: '#ff512f', end: '#dd2476', direction: 'vertical' },
+	{ value: 'aurora', label: 'Aurora Mint', start: '#00c6ff', end: '#0072ff', direction: 'diagonal' },
+	{ value: 'pastel', label: 'Pastel Dream', start: '#fbc2eb', end: '#a6c1ee', direction: 'vertical' },
+	{ value: 'charcoal', label: 'Charcoal Fade', start: '#232526', end: '#414345', direction: 'horizontal' }
+];
+
+const PRESET_ALLOWED_KEYS = [
+	// Content & alignment
+	'title', 'measureLabel', 'measureLabelPos', 'measureLabelGap', 'align',
+	'showLabelDates', 'labelMaxWidthPct', 'endLabelOffsetPx', 'startLabelRightPadPx', 'labelsGapPx',
+	// Number formatting (visual only)
+	'useShortFormatKpi', 'kpiDecimalPlaces', 'valuePrefix', 'valuePrefixCustom', 'valueSuffix', 'valueSuffixCustom',
+	'showSecondaryKpi', 'secondaryLabel', 'secondaryColor', 'secondaryFontSize', 'secondaryFontFamily', 'secondaryDecimalPlaces',
+	// Typography
+	'fontMode', 'valueFontSize', 'titleFontSize', 'deltaFontSize', 'measureLabelSize', 'labelFontSize',
+	'valueFontFamily', 'titleFontFamily', 'deltaFontFamily', 'measureLabelFontFamily', 'labelFontFamily',
+	// Colors & theme
+	'theme', 'valueColor', 'titleColor', 'labelColor', 'measureLabelColor', 'backgroundColor', 'borderColor', 'darkMode',
+	// Layout
+	'borderWidth', 'borderRadius', 'padding', 'headerGapPx', 'cardElevation',
+	'useGradient', 'gradientPreset', 'gradientStart', 'gradientEnd', 'gradientDirection',
+	// Icons
+	'showIcon', 'iconPack', 'iconType', 'iconCustom', 'iconSize', 'iconPosition',
+	// Delta visual
+	'showDelta', 'deltaDisplayType', 'deltaUseShortFormat', 'deltaDecimals', 'deltaFontSize', 'deltaFontFamily',
+	'deltaUpColor', 'deltaDownColor', 'deltaNeutralColor', 'deltaGap', 'showStatusBadge',
+	// Sections / layout ratios
+	'kpiSectionHeight', 'trendSectionHeight', 'sectionGap',
+	// Trend visuals
+	'showTrend', 'trendPosition', 'trendMode', 'trendCorners', 'lineColor', 'lineWidth',
+	'areaColor', 'areaOpacity', 'areaGradient', 'areaGradientType', 'areaGradStartColor', 'areaGradEndColor',
+	'areaGradStartOpacity', 'areaGradEndOpacity', 'showQuickButtons',
+	'button1Value', 'button1Label', 'button2Value', 'button2Label', 'button3Value', 'button3Label',
+	'buttonStyle', 'buttonBackgroundColor', 'buttonLabelColor', 'buttonActiveColor', 'buttonActiveLabelColor',
+	// Selection indicator visuals
+	'selectedIndicator', 'selectedColor',
+	// Effects & hover
+	'showGlow', 'glowColor', 'glowStdDev', 'showTooltip', 'showMinMax',
+	'pulseRadius', 'pulseMinColor', 'pulseMaxColor', 'hoverValueScale', 'hoverLineThickness', 'hoverLineThicknessMultiplier'
+];
+
+function decodeCustomMarkup(markup) {
+	if (!markup) return '';
+	let decoded = markup;
+	try {
+		decoded = decoded
+			.replace(/\\u003c/gi, '<')
+			.replace(/\\u003e/gi, '>')
+			.replace(/\\u0026/gi, '&')
+			.replace(/&lt;/gi, '<')
+			.replace(/&gt;/gi, '>')
+			.replace(/&amp;/gi, '&');
+	} catch (e) {
+		// ignore
+	}
+	return decoded;
+}
+
+function sanitizeSvgMarkup(markup, size) {
+	if (!markup) return '';
+	try {
+		if (window.DOMParser) {
+			const parser = new DOMParser();
+			const doc = parser.parseFromString(markup, 'image/svg+xml');
+			const svg = doc.querySelector('svg');
+			if (svg) {
+				svg.setAttribute('width', size);
+				svg.setAttribute('height', size);
+				if (!svg.getAttribute('xmlns')) {
+					svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+				}
+				svg.setAttribute('preserveAspectRatio', svg.getAttribute('preserveAspectRatio') || 'xMidYMid meet');
+				return new XMLSerializer().serializeToString(svg);
+			}
+		}
+	} catch (e) {
+		// Ignore parser errors, fall back to original markup
+	}
+	return markup;
+}
+
+	function sanitizePresetProps(props) {
+		const snapshot = {};
+		if (!props) return snapshot;
+		PRESET_ALLOWED_KEYS.forEach(function(key) {
+			if (Object.prototype.hasOwnProperty.call(props, key)) {
+				const value = props[key];
+				if (typeof value !== 'function') {
+					snapshot[key] = value;
+				}
+			}
+		});
+		return snapshot;
+	}
+
+	function serializePresetProps(props) {
+		try {
+			return JSON.stringify(sanitizePresetProps(props), null, 2);
+		} catch (e) {
+			console.error('KPI Card: Failed to serialize preset', e);
+			return '';
+		}
+	}
+
+	function parsePresetText(text) {
+		if (!text || typeof text !== 'string') return null;
+		try {
+			return JSON.parse(text);
+		} catch (e) {
+			console.error('KPI Card: Invalid preset JSON', e);
+			return null;
+		}
+	}
+
+	function applyPresetToProps(targetProps, preset) {
+		if (!targetProps || !preset || typeof preset !== 'object') return;
+		PRESET_ALLOWED_KEYS.forEach(function(key) {
+			if (Object.prototype.hasOwnProperty.call(preset, key)) {
+				targetProps[key] = preset[key];
+			}
+		});
+	}
+
 	// Inject styles
 	$('<style>').html(stylesCss + '\n' +
 		'.kpi-tooltip{position:absolute;pointer-events:none;z-index:2;background:' + CONSTANTS.DEFAULT_TOOLTIP_BACKGROUND + ';color:' + CONSTANTS.DEFAULT_TOOLTIP_COLOR + ';padding:' + CONSTANTS.DEFAULT_TOOLTIP_PADDING + ';border-radius:' + CONSTANTS.DEFAULT_TOOLTIP_BORDER_RADIUS + 'px;font-size:' + CONSTANTS.DEFAULT_TOOLTIP_FONT_SIZE + 'px;white-space:nowrap;transform:translate(-50%,-120%);}\n' +
@@ -142,89 +376,14 @@ define([
 	).appendTo('head');
 
 	/**
-	 * Formats a number with Qlik-style auto scaling (K, M, B) and percentage support
-	 * @param {number} value - The value to format
-	 * @param {Object} qMeasureInfo - Qlik measure information
-	 * @param {Object} layout - Layout configuration
-	 * @returns {string} Formatted number string
-	 */
-	function formatNumberWithAutoScaling(value, qMeasureInfo, layout) {
-		if (value === null || value === undefined || !isFinite(value)) return '-';
-		
-		const fmt = (qMeasureInfo && qMeasureInfo.qNumFormat && qMeasureInfo.qNumFormat.qFmt) || '';
-		let isPercent = false;
-		let percentDecimals = null;
-		
-		// Check if format indicates percentage
-		if (fmt && fmt.indexOf('%') !== -1) {
-			isPercent = true;
-			const match = fmt.match(/\.(\d+)[^%]*%/);
-			if (match) percentDecimals = match[1].length;
-		}
-		
-		// Check if suffix indicates percentage
-		if (!isPercent && layout && layout.props) {
-			const suffix = layout.props.valueSuffix === 'custom' ? 
-				layout.props.valueSuffixCustom : layout.props.valueSuffix;
-			if (suffix === '%') isPercent = true;
-		}
-		
-		// Handle percentage formatting
-		if (isPercent && typeof value === 'number' && isFinite(value)) {
-			const scaled = (Math.abs(value) <= 1) ? (value * 100) : value;
-			const decimals = (percentDecimals != null) ? percentDecimals : 2;
-			const pctStr = (isFinite(scaled) && typeof decimals === 'number') ? 
-				scaled.toFixed(decimals) : String(scaled);
-			let result = pctStr + '%';
-			
-			// Apply prefix only; skip suffix to avoid double '%'
-			if (layout && layout.props) {
-				const prefix = layout.props.valuePrefix === 'custom' ? 
-					layout.props.valuePrefixCustom : layout.props.valuePrefix;
-				if (prefix) result = prefix + result;
-			}
-			return result;
-		}
-		
-		// Try to use Qlik's formatting first for non-percentage values
-		let formatted = '';
-		try {
-			if (typeof value === 'number' && fmt && qlik && qlik.formatNumber) {
-				formatted = qlik.formatNumber(value, fmt);
-			}
-		} catch (e) {
-			// Silently handle formatting errors
-		}
-		
-		// If Qlik formatting didn't work or returned raw number, apply our scaling
-		if (!formatted || (!formatted.includes('K') && !formatted.includes('M') && !formatted.includes('B') && Math.abs(value) >= 1000)) {
-			const abs = Math.abs(value);
-			
-			if (abs >= 1e9) {
-				const scaled = value / 1e9;
-				formatted = scaled.toFixed(1) + 'B';
-			} else if (abs >= 1e6) {
-				const scaled = value / 1e6;
-				formatted = scaled.toFixed(1) + 'M';
-			} else if (abs >= 1e3) {
-				const scaled = value / 1e3;
-				formatted = scaled.toFixed(1) + 'K';
-			} else {
-				formatted = Math.round(value).toString();
-			}
-		}
-		
-		return formatted;
-	}
-
-	/**
 	 * Formats a number value with proper prefixes, suffixes, and scaling
 	 * @param {number|null|undefined} value - The value to format
 	 * @param {Object} qMeasureInfo - Qlik measure information
 	 * @param {Object} layout - Layout configuration
+	 * @param {boolean} isDelta - Whether this is a delta value (uses deltaUseShortFormat)
 	 * @returns {string} Formatted number string
 	 */
-	function formatNumber(value, qMeasureInfo, layout) {
+	function formatNumber(value, qMeasureInfo, layout, isDelta, customDecimals) {
 		if (value === null || value === undefined) return '-';
 		
 		const fmt = (qMeasureInfo && qMeasureInfo.qNumFormat && qMeasureInfo.qNumFormat.qFmt) || null;
@@ -272,17 +431,38 @@ define([
 			// Silently handle formatting errors
 		}
 		
-		// Fallback formatting with scaling
+		// Fallback formatting with scaling (only if useShortFormat is enabled)
+		// For delta values, use deltaUseShortFormat; for KPI values, use useShortFormat
+		const useShortFormat = isDelta ? 
+			(layout && layout.props && layout.props.deltaUseShortFormat !== false) : 
+			(layout && layout.props && layout.props.useShortFormat !== false); // Default to true for backward compatibility
+		
 		if (!formatted && typeof value === 'number') {
-			const abs = Math.abs(value);
-			if (abs >= 1e9) {
-				formatted = (value / 1e9).toFixed(1) + 'B';
-			} else if (abs >= 1e6) {
-				formatted = (value / 1e6).toFixed(1) + 'M';
-			} else if (abs >= 1e3) {
-				formatted = (value / 1e3).toFixed(1) + 'K';
+			const decimalsToUse = (typeof customDecimals === 'number') ? customDecimals :
+				(isDelta ? (layout.props.deltaDecimalPlaces ?? layout.props.deltaDecimals ?? 2) : (layout.props.kpiDecimalPlaces ?? 2));
+			if (useShortFormat) {
+				// Use K, M, B abbreviations
+				const abs = Math.abs(value);
+				if (abs >= 1e9) {
+					formatted = (value / 1e9).toFixed(decimalsToUse) + 'B';
+				} else if (abs >= 1e6) {
+					formatted = (value / 1e6).toFixed(decimalsToUse) + 'M';
+				} else if (abs >= 1e3) {
+					formatted = (value / 1e3).toFixed(decimalsToUse) + 'K';
+				} else {
+					formatted = value.toLocaleString(undefined, {
+						minimumFractionDigits: decimalsToUse,
+						maximumFractionDigits: decimalsToUse
+					});
+				}
 			} else {
-				formatted = String(value);
+				// Use full number with thousand separators
+				const abs = Math.abs(value);
+				const localeOpts = {
+					maximumFractionDigits: decimalsToUse,
+					minimumFractionDigits: decimalsToUse
+				};
+				formatted = value.toLocaleString(undefined, localeOpts);
 			}
 		}
 		
@@ -316,11 +496,9 @@ define([
 	 * @param {number} endValue - Ending value
 	 * @param {number} duration - Animation duration in milliseconds
 	 * @param {Function} formatFunction - Function to format the displayed value
-	 * @param {Object} qMeasureInfo - Qlik measure information for auto scaling
-	 * @param {Object} layout - Layout configuration for percentage formatting
 	 * @returns {Function} Function to stop the animation
 	 */
-	function animateCounter(element, startValue, endValue, duration, formatFunction, qMeasureInfo, layout) {
+	function animateCounter(element, startValue, endValue, duration, formatFunction) {
 		if (!element || startValue === endValue) return function() {};
 		
 		let startTime = null;
@@ -336,9 +514,7 @@ define([
 			const currentValue = startValue + (endValue - startValue) * easeOut;
 			
 			if (formatFunction) {
-				// Use auto scaling for animation to prevent decimal issues
-				const animatedValue = formatNumberWithAutoScaling(currentValue, qMeasureInfo, layout);
-				element.textContent = animatedValue;
+				element.textContent = formatFunction(currentValue);
 			} else {
 				element.textContent = Math.round(currentValue);
 			}
@@ -346,7 +522,7 @@ define([
 			if (progress < 1 && isAnimating) {
 				requestAnimationFrame(animate);
 			} else {
-				// Ensure final value uses exact formatting
+				// Ensure final value is exact
 				if (formatFunction) {
 					element.textContent = formatFunction(endValue);
 				} else {
@@ -866,9 +1042,150 @@ define([
 		createTooltip($container, svg, dataPairs, points, w, opts);
 	}
 
-	// Color palettes
-	const PALETTES = {
+	// Modern Theme System - Comprehensive themes for KPI, Trend, and Delta
+	const THEMES = {
 		custom: {},
+		// Modern Blue - Clean and professional
+		modernBlue: {
+			backgroundColor: '#ffffff',
+			titleColor: '#64748b',
+			valueColor: '#0f172a',
+			labelColor: '#94a3b8',
+			measureLabelColor: '#64748b',
+			lineColor: '#3b82f6',
+			areaColor: '#3b82f6',
+			borderColor: '#e2e8f0',
+			deltaUpColor: '#10b981',
+			deltaDownColor: '#ef4444',
+			deltaNeutralColor: '#94a3b8'
+		},
+		// Dark Professional - Elegant dark theme
+		darkProfessional: {
+			backgroundColor: '#1e293b',
+			titleColor: '#cbd5e1',
+			valueColor: '#f1f5f9',
+			labelColor: '#94a3b8',
+			measureLabelColor: '#cbd5e1',
+			lineColor: '#60a5fa',
+			areaColor: '#60a5fa',
+			borderColor: '#334155',
+			deltaUpColor: '#34d399',
+			deltaDownColor: '#f87171',
+			deltaNeutralColor: '#94a3b8'
+		},
+		// Gradient Purple - Modern purple gradient
+		gradientPurple: {
+			backgroundColor: '#faf5ff',
+			titleColor: '#6b21a8',
+			valueColor: '#4c1d95',
+			labelColor: '#9333ea',
+			measureLabelColor: '#7c3aed',
+			lineColor: '#a855f7',
+			areaColor: '#c084fc',
+			borderColor: '#e9d5ff',
+			deltaUpColor: '#10b981',
+			deltaDownColor: '#f43f5e',
+			deltaNeutralColor: '#a78bfa'
+		},
+		// Minimal White - Clean minimal design
+		minimalWhite: {
+			backgroundColor: '#ffffff',
+			titleColor: '#6b7280',
+			valueColor: '#111827',
+			labelColor: '#9ca3af',
+			measureLabelColor: '#6b7280',
+			lineColor: '#6366f1',
+			areaColor: '#818cf8',
+			borderColor: '#e5e7eb',
+			deltaUpColor: '#059669',
+			deltaDownColor: '#dc2626',
+			deltaNeutralColor: '#9ca3af'
+		},
+		// Ocean Teal - Fresh ocean theme
+		oceanTeal: {
+			backgroundColor: '#f0fdfa',
+			titleColor: '#0f766e',
+			valueColor: '#134e4a',
+			labelColor: '#14b8a6',
+			measureLabelColor: '#0d9488',
+			lineColor: '#14b8a6',
+			areaColor: '#5eead4',
+			borderColor: '#ccfbf1',
+			deltaUpColor: '#10b981',
+			deltaDownColor: '#f87171',
+			deltaNeutralColor: '#94a3b8'
+		},
+		// Sunset Warm - Warm orange/red tones
+		sunsetWarm: {
+			backgroundColor: '#fff7ed',
+			titleColor: '#9a3412',
+			valueColor: '#7c2d12',
+			labelColor: '#ea580c',
+			measureLabelColor: '#c2410c',
+			lineColor: '#f97316',
+			areaColor: '#fb923c',
+			borderColor: '#fed7aa',
+			deltaUpColor: '#10b981',
+			deltaDownColor: '#dc2626',
+			deltaNeutralColor: '#fb923c'
+		},
+		// Forest Fresh - Natural green theme
+		forestFresh: {
+			backgroundColor: '#f0fdf4',
+			titleColor: '#166534',
+			valueColor: '#14532d',
+			labelColor: '#16a34a',
+			measureLabelColor: '#15803d',
+			lineColor: '#22c55e',
+			areaColor: '#4ade80',
+			borderColor: '#bbf7d0',
+			deltaUpColor: '#10b981',
+			deltaDownColor: '#f87171',
+			deltaNeutralColor: '#86efac'
+		},
+		// Royal Gold - Luxurious gold theme
+		royalGold: {
+			backgroundColor: '#fffbeb',
+			titleColor: '#92400e',
+			valueColor: '#78350f',
+			labelColor: '#d97706',
+			measureLabelColor: '#b45309',
+			lineColor: '#f59e0b',
+			areaColor: '#fbbf24',
+			borderColor: '#fef3c7',
+			deltaUpColor: '#10b981',
+			deltaDownColor: '#ef4444',
+			deltaNeutralColor: '#fbbf24'
+		},
+		// Cyber Neon - Modern neon cyber theme
+		cyberNeon: {
+			backgroundColor: '#0a0e27',
+			titleColor: '#a78bfa',
+			valueColor: '#e0e7ff',
+			labelColor: '#818cf8',
+			measureLabelColor: '#a78bfa',
+			lineColor: '#8b5cf6',
+			areaColor: '#a78bfa',
+			borderColor: '#312e81',
+			deltaUpColor: '#34d399',
+			deltaDownColor: '#f87171',
+			deltaNeutralColor: '#818cf8'
+		},
+		// Elegant Gray - Sophisticated gray theme
+		elegantGray: {
+			backgroundColor: '#f9fafb',
+			titleColor: '#4b5563',
+			valueColor: '#111827',
+			labelColor: '#6b7280',
+			measureLabelColor: '#4b5563',
+			lineColor: '#6366f1',
+			areaColor: '#818cf8',
+			borderColor: '#e5e7eb',
+			deltaUpColor: '#10b981',
+			deltaDownColor: '#ef4444',
+			deltaNeutralColor: '#9ca3af'
+		},
+		// Slate - Original dark slate
 		slate: {
 			backgroundColor: '#0f172a',
 			titleColor: '#e2e8f0',
@@ -877,8 +1194,12 @@ define([
 			measureLabelColor: '#cbd5e1',
 			lineColor: '#38bdf8',
 			areaColor: '#38bdf8',
-			borderColor: 'transparent'
+			borderColor: 'transparent',
+			deltaUpColor: '#34d399',
+			deltaDownColor: '#f87171',
+			deltaNeutralColor: '#94a3b8'
 		},
+		// Ocean - Original ocean theme
 		ocean: {
 			backgroundColor: '#0b132b',
 			titleColor: '#d8e2dc',
@@ -887,8 +1208,12 @@ define([
 			measureLabelColor: '#c7ced6',
 			lineColor: '#5bc0be',
 			areaColor: '#5bc0be',
-			borderColor: 'transparent'
+			borderColor: 'transparent',
+			deltaUpColor: '#34d399',
+			deltaDownColor: '#f87171',
+			deltaNeutralColor: '#a3b6c4'
 		},
+		// Sunset - Original sunset theme
 		sunset: {
 			backgroundColor: '#1f0a24',
 			titleColor: '#ffd7ba',
@@ -897,8 +1222,12 @@ define([
 			measureLabelColor: '#fec5bb',
 			lineColor: '#ff7b7b',
 			areaColor: '#ff7b7b',
-			borderColor: 'transparent'
+			borderColor: 'transparent',
+			deltaUpColor: '#34d399',
+			deltaDownColor: '#f87171',
+			deltaNeutralColor: '#fec5bb'
 		},
+		// Emerald - Original emerald theme
 		emerald: {
 			backgroundColor: '#062925',
 			titleColor: '#d1fae5',
@@ -907,8 +1236,12 @@ define([
 			measureLabelColor: '#6ee7b7',
 			lineColor: '#34d399',
 			areaColor: '#34d399',
-			borderColor: 'transparent'
+			borderColor: 'transparent',
+			deltaUpColor: '#34d399',
+			deltaDownColor: '#f87171',
+			deltaNeutralColor: '#6ee7b7'
 		},
+		// Violet - Original violet theme
 		violet: {
 			backgroundColor: '#1a102a',
 			titleColor: '#e9d5ff',
@@ -917,79 +1250,165 @@ define([
 			measureLabelColor: '#c4b5fd',
 			lineColor: '#a78bfa',
 			areaColor: '#a78bfa',
-			borderColor: 'transparent'
+			borderColor: 'transparent',
+			deltaUpColor: '#34d399',
+			deltaDownColor: '#f87171',
+			deltaNeutralColor: '#c4b5fd'
+		},
+		// Glass Morphism - Modern glass effect theme
+		glass: {
+			backgroundColor: 'rgba(255, 255, 255, 0.1)',
+			titleColor: '#ffffff',
+			valueColor: '#ffffff',
+			labelColor: 'rgba(255, 255, 255, 0.8)',
+			measureLabelColor: 'rgba(255, 255, 255, 0.9)',
+			lineColor: '#60a5fa',
+			areaColor: '#60a5fa',
+			borderColor: 'rgba(255, 255, 255, 0.2)',
+			deltaUpColor: '#34d399',
+			deltaDownColor: '#f87171',
+			deltaNeutralColor: 'rgba(255, 255, 255, 0.6)'
 		}
-	};
-	
-	const TREND_PALETTES = {
-		custom: {},
-		blue: { lineColor: '#1d4ed8', areaColor: '#60a5fa' },
-		purple: { lineColor: '#7c3aed', areaColor: '#c4b5fd' },
-		green: { lineColor: '#059669', areaColor: '#6ee7b7' },
-		orange: { lineColor: '#ea580c', areaColor: '#fdba74' },
-		red: { lineColor: '#dc2626', areaColor: '#fca5a5' }
 	};
 
 	/**
-	 * Gets effective colors based on palette and custom overrides
+	 * Gets effective colors based on theme and custom overrides
 	 * @param {Object} props - Properties containing color configuration
-	 * @returns {Object} Object containing effective color values
+	 * @returns {Object} Object containing effective color values including delta colors
 	 */
 	function getEffectiveColors(props) {
-		const pal = PALETTES[props.colorPalette || 'custom'] || {};
-		const trendPal = TREND_PALETTES[props.trendPalette || 'custom'] || {};
+		if (!props) props = {};
+		const selectedTheme = props.theme || 'custom';
+		const theme = THEMES[selectedTheme] || {};
 		
-		// Helper function to pick color from UI or palette
-		function pickFromUiOrPalette(key, fallback) { 
-			// If custom value exists, use it first
+		// Helper function to pick color from theme or UI override
+		function pickFromThemeOrUi(key, fallback) { 
+			// If theme is selected (not custom) and theme has this color, use theme value
+			if (selectedTheme && selectedTheme !== 'custom' && theme[key] != null && theme[key] !== '') {
+				return theme[key];
+			}
+			// If custom theme or theme doesn't have this color, use UI value
 			if ((props && props[key]) != null && props[key] !== '') return props[key];
-			// Then use palette value
-			if (props.colorPalette !== 'custom' && pal[key] != null) return pal[key];
-			// Finally fallback
-			return fallback != null ? fallback : undefined;
-		}
-		
-		// Helper function to pick trend color from UI or palette
-		function pickTrendFromUiOrPalette(key, fallback) { 
-			// If custom value exists, use it first (regardless of palette selection)
-			if ((props && props[key]) != null && props[key] !== '') return props[key];
-			// Then use trend palette (only if not custom)
-			if (props.trendPalette !== 'custom' && trendPal[key] != null) return trendPal[key];
-			// Then use main palette (only if not custom)
-			if (props.colorPalette !== 'custom' && pal[key] != null) return pal[key];
 			// Finally fallback
 			return fallback != null ? fallback : undefined;
 		}
 		
 		return {
-			backgroundColor: pickFromUiOrPalette('backgroundColor', CONSTANTS.DEFAULT_BACKGROUND_COLOR),
-			titleColor: pickFromUiOrPalette('titleColor', CONSTANTS.DEFAULT_TITLE_COLOR),
-			valueColor: pickFromUiOrPalette('valueColor', CONSTANTS.DEFAULT_VALUE_COLOR),
-			labelColor: pickFromUiOrPalette('labelColor', CONSTANTS.DEFAULT_LABEL_COLOR),
-			measureLabelColor: pickFromUiOrPalette('measureLabelColor', CONSTANTS.DEFAULT_MEASURE_LABEL_COLOR),
-			lineColor: pickTrendFromUiOrPalette('lineColor', CONSTANTS.DEFAULT_LINE_COLOR),
-			areaColor: pickTrendFromUiOrPalette('areaColor', pickTrendFromUiOrPalette('lineColor', CONSTANTS.DEFAULT_AREA_COLOR)),
-			borderColor: pickFromUiOrPalette('borderColor', CONSTANTS.DEFAULT_BORDER_COLOR)
+			backgroundColor: pickFromThemeOrUi('backgroundColor', CONSTANTS.DEFAULT_BACKGROUND_COLOR),
+			titleColor: pickFromThemeOrUi('titleColor', CONSTANTS.DEFAULT_TITLE_COLOR),
+			valueColor: pickFromThemeOrUi('valueColor', CONSTANTS.DEFAULT_VALUE_COLOR),
+			labelColor: pickFromThemeOrUi('labelColor', CONSTANTS.DEFAULT_LABEL_COLOR),
+			measureLabelColor: pickFromThemeOrUi('measureLabelColor', CONSTANTS.DEFAULT_MEASURE_LABEL_COLOR),
+			lineColor: pickFromThemeOrUi('lineColor', CONSTANTS.DEFAULT_LINE_COLOR),
+			areaColor: pickFromThemeOrUi('areaColor', pickFromThemeOrUi('lineColor', CONSTANTS.DEFAULT_AREA_COLOR)),
+			borderColor: pickFromThemeOrUi('borderColor', CONSTANTS.DEFAULT_BORDER_COLOR),
+			deltaUpColor: pickFromThemeOrUi('deltaUpColor', CONSTANTS.DEFAULT_DELTA_UP_COLOR),
+			deltaDownColor: pickFromThemeOrUi('deltaDownColor', CONSTANTS.DEFAULT_DELTA_DOWN_COLOR),
+			deltaNeutralColor: pickFromThemeOrUi('deltaNeutralColor', CONSTANTS.DEFAULT_DELTA_NEUTRAL_COLOR),
+			gradientStart: pickFromThemeOrUi('gradientStart', props.gradientStart),
+			gradientEnd: pickFromThemeOrUi('gradientEnd', props.gradientEnd)
 		};
 	}
 
+	// Cache for field and variable lists - will be populated in paint
+	var fieldListCache = [];
+	var variableListCache = [];
+	var responsiveObserverMap = {};
+	var responsiveObserverState = {};
+	/**
+	 * Qlik variable list helper – normalizes common response shapes coming
+	 * from both app.getList('VariableList') and app.variable.getAll().
+	 */
+	function extractVariableItems(source) {
+		if (!source) {
+			return [];
+		}
+		if (Array.isArray(source)) {
+			return source;
+		}
+		if (source.qVariableList && Array.isArray(source.qVariableList.qItems)) {
+			return source.qVariableList.qItems;
+		}
+		if (source.layout) {
+			return extractVariableItems(source.layout);
+		}
+		return [];
+	}
+	var responsiveObserverRaf = {};
+
+	function setupResponsiveObserver($element, layout, matrix) {
+		if (typeof ResizeObserver === 'undefined' || !$element || !$element.length) {
+			return;
+		}
+		const el = $element[0];
+		if (!el) return;
+		const elementId = (layout && layout.qInfo && layout.qInfo.qId) || el.getAttribute('data-qv-object') || el.id || 'kpi-card-default';
+		const rect = el.getBoundingClientRect();
+		const currentSize = { width: rect.width, height: rect.height };
+		const existingState = responsiveObserverState[elementId] || {};
+		responsiveObserverState[elementId] = {
+			layout: layout,
+			matrix: matrix,
+			element: el,
+			size: existingState.size || currentSize
+		};
+		
+		if (!responsiveObserverMap[elementId]) {
+			responsiveObserverMap[elementId] = new ResizeObserver(function(entries) {
+				const state = responsiveObserverState[elementId];
+				if (!state || !entries || !entries.length) return;
+				const contentRect = entries[0].contentRect || {};
+				const newWidth = contentRect.width;
+				const newHeight = contentRect.height;
+				const prevSize = state.size || {};
+				if (Math.abs((prevSize.width || 0) - newWidth) < 0.5 &&
+					Math.abs((prevSize.height || 0) - newHeight) < 0.5) {
+					return;
+				}
+				state.size = { width: newWidth, height: newHeight };
+				if (responsiveObserverRaf[elementId]) {
+					cancelAnimationFrame(responsiveObserverRaf[elementId]);
+				}
+				responsiveObserverRaf[elementId] = requestAnimationFrame(function() {
+					const stateSnapshot = responsiveObserverState[elementId];
+					if (!stateSnapshot) return;
+					const $el = $(stateSnapshot.element);
+					safeExecute(renderCard, [$el, stateSnapshot.layout, stateSnapshot.matrix], 'ResponsiveResize');
+				});
+			});
+			responsiveObserverMap[elementId].observe(el);
+		}
+	}
+	
 	var properties = {
 		type: 'items', component: 'accordion', items: {
 			data: { uses: 'data', items: { dimensions: { min: 1, max: 1 }, measures: { min: 1, max: 1 } } },
 			sorting: { uses: 'sorting' },
 			appearance: { uses: 'settings', items: {
-				// KPI Section
-				kpiSection: { type: 'items', label: 'KPI', items: {
+				// Content & Numbers
+				contentSection: { type: 'items', label: 'Content & Numbers', items: {
 					title: { ref: 'props.title', label: 'Title', type: 'string', defaultValue: '' },
 					measureLabel: { ref: 'props.measureLabel', label: 'Measure Label', type: 'string', defaultValue: '' },
 					measureLabelPos: { ref: 'props.measureLabelPos', label: 'Measure Label Position', type: 'string', component: 'dropdown', options: [ { value: 'top', label: 'Top' }, { value: 'bottom', label: 'Bottom' }, { value: 'left', label: 'Left' }, { value: 'right', label: 'Right' } ], defaultValue: 'bottom' },
 					measureLabelGap: { ref: 'props.measureLabelGap', label: 'Label Gap (px)', type: 'number', defaultValue: 4 },
 					align: { ref: 'props.align', label: 'Alignment', type: 'string', component: 'dropdown', options: [ { value: 'left', label: 'Left' }, { value: 'center', label: 'Center' }, { value: 'right', label: 'Right' } ], defaultValue: 'left' },
+					useShortFormat: { ref: 'props.useShortFormat', label: 'Use Short Format (K/M/B) for KPI Value', type: 'boolean', defaultValue: true },
+					kpiDecimalPlaces: { ref: 'props.kpiDecimalPlaces', label: 'KPI Decimal Places', type: 'number', defaultValue: 0, min: 0, max: 6 },
+					valuePrefix: { ref: 'props.valuePrefix', label: 'Value Prefix', type: 'string', component: 'dropdown', options: [ { value: '', label: 'None' }, { value: '₺', label: 'Turkish Lira (₺)' }, { value: '$', label: 'Dollar ($)' }, { value: '€', label: 'Euro (€)' }, { value: '£', label: 'Pound (£)' }, { value: '¥', label: 'Yen (¥)' }, { value: '₹', label: 'Rupee (₹)' }, { value: 'custom', label: 'Custom...' } ], defaultValue: '' },
+					valuePrefixCustom: { ref: 'props.valuePrefixCustom', label: 'Custom Prefix', type: 'string', component: 'text', defaultValue: '', show: function(layout) { return layout.props.valuePrefix === 'custom'; } },
+					valueSuffix: { ref: 'props.valueSuffix', label: 'Value Suffix', type: 'string', component: 'dropdown', options: [ { value: '', label: 'None' }, { value: '%', label: 'Percent (%)' }, { value: 'K', label: 'Thousands (K)' }, { value: 'M', label: 'Millions (M)' }, { value: 'B', label: 'Billions (B)' }, { value: 'custom', label: 'Custom...' } ], defaultValue: '' },
+					valueSuffixCustom: { ref: 'props.valueSuffixCustom', label: 'Custom Suffix', type: 'string', component: 'text', defaultValue: '', show: function(layout) { return layout.props.valueSuffix === 'custom'; } },
 					kpiAgg: { ref: 'props.kpiAgg', label: 'KPI Aggregation', type: 'string', component: 'dropdown', options: [ { value: 'last', label: 'Last' }, { value: 'sum', label: 'Sum' }, { value: 'avg', label: 'Average' }, { value: 'min', label: 'Min' }, { value: 'max', label: 'Max' } ], defaultValue: 'last' },
-					kpiScope: { ref: 'props.kpiScope', label: 'KPI Scope', type: 'string', component: 'dropdown', options: [ { value: 'full', label: 'Full data' }, { value: 'window', label: 'Trend window' } ], defaultValue: 'full' }
+					kpiScope: { ref: 'props.kpiScope', label: 'KPI Scope', type: 'string', component: 'dropdown', options: [ { value: 'full', label: 'Full data' }, { value: 'window', label: 'Trend window' } ], defaultValue: 'full' },
+					showSecondaryKpi: { ref: 'props.showSecondaryKpi', label: 'Show Secondary KPI (previous period)', type: 'boolean', defaultValue: false },
+					secondaryLabel: { ref: 'props.secondaryLabel', label: 'Secondary Label', type: 'string', defaultValue: 'Previous Period', show: function(d) { return d && d.props && d.props.showSecondaryKpi; } },
+					secondaryColor: { ref: 'props.secondaryColor', label: 'Secondary Color', type: 'string', defaultValue: '#94a3b8', show: function(d) { return d && d.props && d.props.showSecondaryKpi; } },
+					secondaryFontSize: { ref: 'props.secondaryFontSize', label: 'Secondary Font Size (px)', type: 'number', defaultValue: 16, min: 8, max: 48, show: function(d) { return d && d.props && d.props.showSecondaryKpi; } },
+					secondaryFontFamily: { ref: 'props.secondaryFontFamily', label: 'Secondary Font Family', type: 'string', defaultValue: 'Open Sans', show: function(d) { return d && d.props && d.props.showSecondaryKpi; } },
+					secondaryDecimalPlaces: { ref: 'props.secondaryDecimalPlaces', label: 'Secondary Decimal Places', type: 'number', defaultValue: 0, min: 0, max: 6, show: function(d) { return d && d.props && d.props.showSecondaryKpi; } }
 				} },
-				// Fonts Section
-				fontsSection: { type: 'items', label: 'Fonts', items: {
+				// Typography Section
+				typographySection: { type: 'items', label: 'Typography', items: {
 					// Font Mode
 					fontMode: { ref: 'props.fontMode', label: 'Font Mode', type: 'string', component: 'dropdown', options: [ { value: 'static', label: 'Static (px)' }, { value: 'responsive', label: 'Responsive (em)' } ], defaultValue: 'static' },
 					// Static Font Sizes
@@ -1010,25 +1429,124 @@ define([
 					} }
 				} },
 				// Colors Section
-				colorsSection: { type: 'items', label: 'Colors', items: {
-					colorPalette: { ref: 'props.colorPalette', label: 'Color Palette', type: 'string', component: 'dropdown', options: [ { value: 'custom', label: 'Custom' }, { value: 'slate', label: 'Slate' }, { value: 'ocean', label: 'Ocean' }, { value: 'sunset', label: 'Sunset' }, { value: 'emerald', label: 'Emerald' }, { value: 'violet', label: 'Violet' } ], defaultValue: 'custom' },
-					valueColor: { ref: 'props.valueColor', label: 'Value Color', type: 'string', defaultValue: '#111111' },
-					titleColor: { ref: 'props.titleColor', label: 'Title Color', type: 'string', defaultValue: '#111111' },
-					dateLabelColor: { ref: 'props.labelColor', label: 'Date Label Color', type: 'string', defaultValue: '#555555' },
-					measureLabelColor: { ref: 'props.measureLabelColor', label: 'Measure Label Color', type: 'string', defaultValue: '#666666' },
-					backgroundColor: { ref: 'props.backgroundColor', label: 'Background', type: 'string', defaultValue: 'transparent' },
-					borderColor: { ref: 'props.borderColor', label: 'Border Color', type: 'string', defaultValue: 'transparent' },
-					valuePrefix: { ref: 'props.valuePrefix', label: 'Value Prefix', type: 'string', component: 'dropdown', options: [ { value: '', label: 'None' }, { value: '₺', label: 'Turkish Lira (₺)' }, { value: '$', label: 'Dollar ($)' }, { value: '€', label: 'Euro (€)' }, { value: '£', label: 'Pound (£)' }, { value: '¥', label: 'Yen (¥)' }, { value: '₹', label: 'Rupee (₹)' }, { value: 'custom', label: 'Custom...' } ], defaultValue: '' },
-					valuePrefixCustom: { ref: 'props.valuePrefixCustom', label: 'Custom Prefix', type: 'string', component: 'text', defaultValue: '', show: function(layout) { return layout.props.valuePrefix === 'custom'; } },
-					valueSuffix: { ref: 'props.valueSuffix', label: 'Value Suffix', type: 'string', component: 'dropdown', options: [ { value: '', label: 'None' }, { value: '%', label: 'Percent (%)' }, { value: 'K', label: 'Thousands (K)' }, { value: 'M', label: 'Millions (M)' }, { value: 'B', label: 'Billions (B)' }, { value: 'custom', label: 'Custom...' } ], defaultValue: '' },
-					valueSuffixCustom: { ref: 'props.valueSuffixCustom', label: 'Custom Suffix', type: 'string', component: 'text', defaultValue: '', show: function(layout) { return layout.props.valueSuffix === 'custom'; } }
+				colorsSection: { type: 'items', label: 'Colors & Theme', items: {
+					theme: { ref: 'props.theme', label: 'Theme', type: 'string', component: 'dropdown', options: [ { value: 'custom', label: 'Custom' }, { value: 'modernBlue', label: 'Modern Blue' }, { value: 'darkProfessional', label: 'Dark Professional' }, { value: 'gradientPurple', label: 'Gradient Purple' }, { value: 'minimalWhite', label: 'Minimal White' }, { value: 'oceanTeal', label: 'Ocean Teal' }, { value: 'sunsetWarm', label: 'Sunset Warm' }, { value: 'forestFresh', label: 'Forest Fresh' }, { value: 'royalGold', label: 'Royal Gold' }, { value: 'cyberNeon', label: 'Cyber Neon' }, { value: 'elegantGray', label: 'Elegant Gray' }, { value: 'glass', label: 'Glass Morphism' }, { value: 'slate', label: 'Slate' }, { value: 'ocean', label: 'Ocean' }, { value: 'sunset', label: 'Sunset' }, { value: 'emerald', label: 'Emerald' }, { value: 'violet', label: 'Violet' } ], defaultValue: 'custom' },
+					valueColor: { ref: 'props.valueColor', label: 'Value Color', type: 'string', defaultValue: '#111111', show: function(d) { return d && d.props && d.props.theme === 'custom'; } },
+					titleColor: { ref: 'props.titleColor', label: 'Title Color', type: 'string', defaultValue: '#111111', show: function(d) { return d && d.props && d.props.theme === 'custom'; } },
+					dateLabelColor: { ref: 'props.labelColor', label: 'Date Label Color', type: 'string', defaultValue: '#555555', show: function(d) { return d && d.props && d.props.theme === 'custom'; } },
+					measureLabelColor: { ref: 'props.measureLabelColor', label: 'Measure Label Color', type: 'string', defaultValue: '#666666', show: function(d) { return d && d.props && d.props.theme === 'custom'; } },
+					backgroundColor: { ref: 'props.backgroundColor', label: 'Background', type: 'string', defaultValue: 'transparent', show: function(d) { return d && d.props && d.props.theme === 'custom'; } },
+					borderColor: { ref: 'props.borderColor', label: 'Border Color', type: 'string', defaultValue: 'transparent', show: function(d) { return d && d.props && d.props.theme === 'custom'; } }
+				} },
+				conditionalSection: { type: 'items', label: 'Conditional Formatting', items: {
+					enableBackgroundCondition: { ref: 'props.enableBackgroundCondition', label: 'Enable Background Rule', type: 'boolean', defaultValue: false },
+					backgroundConditionOperator: { ref: 'props.backgroundConditionOperator', label: 'Background Condition', type: 'string', component: 'dropdown', options: [ { value: 'gt', label: '> (greater than)' }, { value: 'gte', label: '≥ (greater equal)' }, { value: 'lt', label: '< (less than)' }, { value: 'lte', label: '≤ (less equal)' }, { value: 'eq', label: '= (equals)' }, { value: 'between', label: 'Between' } ], defaultValue: 'gt', show: function(d) { return d && d.props && d.props.enableBackgroundCondition; } },
+					backgroundConditionValue: { ref: 'props.backgroundConditionValue', label: 'Background Threshold', type: 'number', expression: 'optional', defaultValue: 0, show: function(d) { return d && d.props && d.props.enableBackgroundCondition; } },
+					backgroundConditionValue2: { ref: 'props.backgroundConditionValue2', label: 'Background Threshold (max)', type: 'number', expression: 'optional', defaultValue: 0, show: function(d) { return d && d.props && d.props.enableBackgroundCondition && d.props.backgroundConditionOperator === 'between'; } },
+					backgroundConditionColor: { ref: 'props.backgroundConditionColor', label: 'Background Color', type: 'string', defaultValue: '#1f2937', show: function(d) { return d && d.props && d.props.enableBackgroundCondition; } }
 				} },
 				// Layout Section
-				layoutSection: { type: 'items', label: 'Layout', items: {
+				layoutSection: { type: 'items', label: 'Layout & Background', items: {
 					borderWidth: { ref: 'props.borderWidth', label: 'Border Width (px)', type: 'number', defaultValue: 0 },
 					borderRadius: { ref: 'props.borderRadius', label: 'Border Radius (px)', type: 'number', defaultValue: 0 },
 					padding: { ref: 'props.padding', label: 'Padding (px)', type: 'number', defaultValue: 8 },
-					headerGapPx: { ref: 'props.headerGapPx', label: 'Header Gap (px)', type: 'number', defaultValue: 2 }
+					headerGapPx: { ref: 'props.headerGapPx', label: 'Header Gap (px)', type: 'number', defaultValue: 2 },
+					cardElevation: { ref: 'props.cardElevation', label: 'Card Elevation/Shadow', type: 'string', component: 'dropdown', options: [ { value: 'none', label: 'None' }, { value: 'subtle', label: 'Subtle' }, { value: 'medium', label: 'Medium' }, { value: 'strong', label: 'Strong' }, { value: 'neumorphic', label: 'Neumorphic' } ], defaultValue: 'none' },
+					useGradient: { ref: 'props.useGradient', label: 'Use Gradient Background', type: 'boolean', defaultValue: false },
+					gradientPreset: { ref: 'props.gradientPreset', label: 'Gradient Preset', type: 'string', component: 'dropdown', options: GRADIENT_PRESETS, defaultValue: 'custom', show: function(d) { return d && d.props && d.props.useGradient; } },
+					gradientStart: { ref: 'props.gradientStart', label: 'Gradient Start Color', type: 'string', defaultValue: '#3b82f6', show: function(d) { return d && d.props && d.props.useGradient && (d.props.gradientPreset || 'custom') === 'custom'; } },
+					gradientEnd: { ref: 'props.gradientEnd', label: 'Gradient End Color', type: 'string', defaultValue: '#8b5cf6', show: function(d) { return d && d.props && d.props.useGradient && (d.props.gradientPreset || 'custom') === 'custom'; } },
+					gradientDirection: { ref: 'props.gradientDirection', label: 'Gradient Direction', type: 'string', component: 'dropdown', options: [ { value: 'vertical', label: 'Vertical (Top to Bottom)' }, { value: 'horizontal', label: 'Horizontal (Left to Right)' }, { value: 'diagonal', label: 'Diagonal (Top Left to Bottom Right)' }, { value: 'radial', label: 'Radial (Center)' } ], defaultValue: 'vertical', show: function(d) { return d && d.props && d.props.useGradient && (d.props.gradientPreset || 'custom') === 'custom'; } }
+				} },
+				iconSection: { type: 'items', label: 'Icons', items: {
+					showIcon: { ref: 'props.showIcon', label: 'Show Icon', type: 'boolean', defaultValue: false },
+					iconPack: { ref: 'props.iconPack', label: 'Icon Source', type: 'string', component: 'dropdown', options: [ { value: 'emoji', label: 'Emoji Set' }, { value: 'modern', label: 'Modern Line Icons' }, { value: 'custom', label: 'Custom (paste your own)' } ], defaultValue: 'emoji', show: function(d) { return d && d.props && d.props.showIcon; } },
+					iconType: { ref: 'props.iconType', label: 'Icon Type', type: 'string', component: 'dropdown', options: function(d) { return (d && d.props && d.props.iconPack === 'modern') ? MODERN_ICON_OPTIONS : EMOJI_ICON_OPTIONS; }, defaultValue: 'chart', show: function(d) { return d && d.props && d.props.showIcon && d.props.iconPack !== 'custom'; } },
+					iconCustom: { ref: 'props.iconCustom', label: 'Custom Icon Markup', type: 'string', component: 'textarea', defaultValue: '', show: function(d) { return d && d.props && d.props.showIcon && d.props.iconPack === 'custom'; } },
+					iconSize: { ref: 'props.iconSize', label: 'Icon Size (px)', type: 'number', defaultValue: 24, min: 12, max: 64, show: function(d) { return d && d.props && d.props.showIcon; } },
+					iconPosition: { ref: 'props.iconPosition', label: 'Icon Position', type: 'string', component: 'dropdown', options: [ { value: 'top-left', label: 'Top Left' }, { value: 'top-right', label: 'Top Right' }, { value: 'before-title', label: 'Before Title' }, { value: 'after-title', label: 'After Title' }, { value: 'value-right', label: 'Aligned with KPI Value (Right)' } ], defaultValue: 'top-right', show: function(d) { return d && d.props && d.props.showIcon; } }
+				} },
+				// Interaction Section (Moved from Layout)
+				interactionSection: { type: 'items', label: 'Interaction / Actions', items: {
+					enableClick: { ref: 'props.enableClick', label: 'Enable Click Interaction', type: 'boolean', defaultValue: false },
+					clickAction: { ref: 'props.clickAction', label: 'Click Action', type: 'string', component: 'dropdown', options: [ { value: 'select-field-value', label: 'Select Value in a Field' }, { value: 'change-variable', label: 'Change Variable Value' }, { value: 'clear', label: 'Clear Selection' } ], defaultValue: 'select-field-value', show: function(d) { return d && d.props && d.props.enableClick; } },
+					selectFieldName: { 
+						ref: 'props.selectFieldName', 
+						label: 'Field', 
+						type: 'string', 
+						component: 'dropdown', 
+						options: function() {
+							if (fieldListCache.length) {
+								return fieldListCache.slice();
+							}
+							try {
+								if (qlik && qlik.currApp) {
+									return qlik.currApp().getList('FieldList').then(function(model) {
+										return model.layout.qFieldList.qItems.map(function(item) {
+											return {
+												value: item.qName,
+												label: item.qName
+											};
+										});
+									}).catch(function() { return []; });
+								}
+							} catch (e) {
+								return [];
+							}
+							return [];
+						},
+						defaultValue: '', 
+						show: function(d) { return d && d.props && d.props.enableClick && d.props.clickAction === 'select-field-value'; } 
+					},
+					selectFieldValue: { ref: 'props.selectFieldValue', label: 'Value to Select', type: 'string', defaultValue: '', show: function(d) { return d && d.props && d.props.enableClick && d.props.clickAction === 'select-field-value'; } },
+					variableName: { 
+						ref: 'props.variableName', 
+						label: 'Variable', 
+						type: 'string', 
+						component: 'dropdown', 
+						options: function() {
+							if (variableListCache.length) {
+								return variableListCache.slice();
+							}
+							try {
+								if (qlik && qlik.currApp) {
+									const app = qlik.currApp();
+									if (app.getList) {
+										return app.getList('VariableList').then(function(model) {
+											const varItems = extractVariableItems(model);
+											return varItems.map(function(v) {
+												return {
+													value: v.qName,
+													label: v.qName
+												};
+											});
+										}).catch(function() { return []; });
+									}
+									if (app.variable && app.variable.getAll) {
+										return app.variable.getAll().then(function(vars) {
+											const varItems = extractVariableItems(vars);
+											return varItems.map(function(v) {
+												return {
+													value: v.qName,
+													label: v.qName
+												};
+											});
+										}).catch(function() { return []; });
+									}
+								}
+							} catch (e) {
+								return [];
+							}
+							return [];
+						},
+						defaultValue: '', 
+						show: function(d) { 
+							return d && d.props && d.props.enableClick && d.props.clickAction === 'change-variable'; 
+						} 
+					},
+					variableValue: { ref: 'props.variableValue', label: 'Variable Value', type: 'string', defaultValue: '', show: function(d) { return d && d.props && d.props.enableClick && d.props.clickAction === 'change-variable'; } },
+					selectedIndicator: { ref: 'props.selectedIndicator', label: 'Selected Indicator Style', type: 'string', component: 'dropdown', options: [ { value: 'tapered-bar', label: 'Neon Bar (Modern)' }, { value: 'border', label: 'Full Border' }, { value: 'bottom-border', label: 'Bottom Border' }, { value: 'top-border', label: 'Top Border' }, { value: 'glow', label: 'Glow Effect' }, { value: 'background', label: 'Background Tint' } ], defaultValue: 'tapered-bar', show: function(d) { return d && d.props && d.props.enableClick; } },
+					selectedColor: { ref: 'props.selectedColor', label: 'Selected Indicator Color', type: 'string', defaultValue: '#3b82f6', show: function(d) { return d && d.props && d.props.enableClick; } }
 				} },
 				// Responsive Layout Section
 				responsiveLayoutSection: { type: 'items', label: 'Responsive Layout', items: {
@@ -1036,9 +1554,11 @@ define([
 					trendSectionHeight: { ref: 'props.trendSectionHeight', label: 'Trend Section Height (%)', type: 'number', defaultValue: 40, min: 20, max: 80 },
 					sectionGap: { ref: 'props.sectionGap', label: 'Section Gap (vh)', type: 'number', defaultValue: 1, min: 0, max: 5 }
 				} },
-				// Delta Section
-				deltaSection: { type: 'items', label: 'Delta Change', items: {
+				// Delta & Status Section
+				deltaSection: { type: 'items', label: 'Delta & Status', items: {
 					showDelta: { ref: 'props.showDelta', label: 'Show Delta vs Previous', type: 'boolean', defaultValue: true },
+					deltaDisplayType: { ref: 'props.deltaDisplayType', label: 'Delta Display Type', type: 'string', component: 'dropdown', options: [ { value: 'percentage', label: 'Percentage (%)' }, { value: 'absolute', label: 'Absolute Amount' } ], defaultValue: 'percentage', show: function(layout) { return layout.props.showDelta; } },
+					deltaUseShortFormat: { ref: 'props.deltaUseShortFormat', label: 'Use Short Format (K/M/B) for Delta', type: 'boolean', defaultValue: true, show: function(d) { return d && d.props && d.props.showDelta && d.props.deltaDisplayType === 'absolute'; } },
 					deltaMode: { ref: 'props.deltaMode', label: 'Delta Mode', type: 'string', component: 'dropdown', options: [ { value: 'points', label: 'Previous N points (offset supported)' } ], defaultValue: 'points' },
 					deltaPoints: { ref: 'props.deltaPoints', label: 'Window Size N (points)', type: 'number', defaultValue: 1 },
 					deltaOffset: { ref: 'props.deltaOffset', label: 'Compare Offset (in windows)', type: 'number', defaultValue: 1 },
@@ -1046,32 +1566,47 @@ define([
 					deltaDecimals: { ref: 'props.deltaDecimals', label: 'Delta Decimals', type: 'number', defaultValue: 1 },
 					deltaFontSize: { ref: 'props.deltaFontSize', label: 'Delta Font Size (px)', type: 'number', defaultValue: 0 },
 					deltaFontFamily: { ref: 'props.deltaFontFamily', label: 'Delta Font Family', type: 'string', defaultValue: 'Open Sans' },
-					deltaUpColor: { ref: 'props.deltaUpColor', label: 'Delta Up Color', type: 'string', defaultValue: '#16a34a' },
-					deltaDownColor: { ref: 'props.deltaDownColor', label: 'Delta Down Color', type: 'string', defaultValue: '#dc2626' },
-					deltaNeutralColor: { ref: 'props.deltaNeutralColor', label: 'Delta Neutral Color', type: 'string', defaultValue: '#9ca3af' },
-					deltaGap: { ref: 'props.deltaGap', label: 'Gap between Value and Delta (px)', type: 'number', defaultValue: 6 }
+					deltaUpColor: { ref: 'props.deltaUpColor', label: 'Delta Up Color', type: 'string', defaultValue: '#16a34a', show: function(d) { return d && d.props && d.props.theme === 'custom'; } },
+					deltaDownColor: { ref: 'props.deltaDownColor', label: 'Delta Down Color', type: 'string', defaultValue: '#dc2626', show: function(d) { return d && d.props && d.props.theme === 'custom'; } },
+					deltaNeutralColor: { ref: 'props.deltaNeutralColor', label: 'Delta Neutral Color', type: 'string', defaultValue: '#9ca3af', show: function(d) { return d && d.props && d.props.theme === 'custom'; } },
+					deltaGap: { ref: 'props.deltaGap', label: 'Gap between Value and Delta (px)', type: 'number', defaultValue: 6 },
+					showStatusBadge: { ref: 'props.showStatusBadge', label: 'Show Status Badge', type: 'boolean', defaultValue: false, show: function(d) { return d && d.props && d.props.showDelta; } }
 				} },
 				// Trend Section
 				trendSection: { type: 'items', label: 'Trend', items: {
-					trendPosition: { ref: 'props.trendPosition', label: 'Trend Position', type: 'string', component: 'dropdown', options: [ { value: 'bottom', label: 'Bottom' }, { value: 'top', label: 'Top' } ], defaultValue: 'bottom' },
+					showTrend: { ref: 'props.showTrend', label: 'Show Trend', type: 'boolean', defaultValue: true },
+					trendPosition: { ref: 'props.trendPosition', label: 'Trend Position', type: 'string', component: 'dropdown', options: [ { value: 'bottom', label: 'Bottom' }, { value: 'top', label: 'Top' } ], defaultValue: 'bottom', show: function(layout) { return layout.props.showTrend; } },
 					trendHeight: { ref: 'props.trendHeight', label: 'Trend Height (px) - Auto responsive if 0', type: 'number', defaultValue: 0, show: function(layout) { return false; } },
 					trendTopMarginPx: { ref: 'props.trendTopMarginPx', label: 'Trend Top Margin (px) - Auto responsive if 0', type: 'number', defaultValue: 0, show: function(layout) { return false; } },
-					trendMode: { ref: 'props.trendMode', label: 'Trend Mode', type: 'string', component: 'dropdown', options: [ { value: 'line', label: 'Line' }, { value: 'area', label: 'Area' } ], defaultValue: 'line' },
-					trendCorners: { ref: 'props.trendCorners', label: 'Trend Corner Style', type: 'string', component: 'dropdown', options: [ { value: 'sharp', label: 'Sharp' }, { value: 'smooth', label: 'Smooth' } ], defaultValue: 'sharp' },
-					trendPalette: { ref: 'props.trendPalette', label: 'Trend Palette', type: 'string', component: 'dropdown', options: [ { value: 'custom', label: 'Custom' }, { value: 'blue', label: 'Blue' }, { value: 'purple', label: 'Purple' }, { value: 'green', label: 'Green' }, { value: 'orange', label: 'Orange' }, { value: 'red', label: 'Red' } ], defaultValue: 'custom' },
-					lineColor: { ref: 'props.lineColor', label: 'Trend Line Color', type: 'string', defaultValue: '#3f51b5' },
-					lineWidth: { ref: 'props.lineWidth', label: 'Trend Line Width', type: 'number', defaultValue: 1.5 },
-					areaColor: { ref: 'props.areaColor', label: 'Area Fill Color', type: 'string', defaultValue: '#3f51b5' },
-					areaOpacity: { ref: 'props.areaOpacity', label: 'Area Opacity (0-1)', type: 'number', defaultValue: 0.2 },
-					areaGradient: { ref: 'props.areaGradient', label: 'Area Gradient Fill', type: 'boolean', defaultValue: false },
-					areaGradientType: { ref: 'props.areaGradientType', label: 'Gradient Type', type: 'string', component: 'dropdown', options: [ { value: 'vertical', label: 'Vertical' }, { value: 'horizontal', label: 'Horizontal' } ], defaultValue: 'vertical', show: function(d){ return d.props && d.props.areaGradient; } },
-					areaGradStartColor: { ref: 'props.areaGradStartColor', label: 'Gradient Start Color', type: 'string', defaultValue: '#3f51b5', show: function(d){ return d.props && d.props.areaGradient; } },
-					areaGradEndColor: { ref: 'props.areaGradEndColor', label: 'Gradient End Color', type: 'string', defaultValue: '#3f51b5', show: function(d){ return d.props && d.props.areaGradient; } },
-					areaGradStartOpacity: { ref: 'props.areaGradStartOpacity', label: 'Gradient Start Opacity', type: 'number', defaultValue: 0.2, show: function(d){ return d.props && d.props.areaGradient; } },
-					areaGradEndOpacity: { ref: 'props.areaGradEndOpacity', label: 'Gradient End Opacity', type: 'number', defaultValue: 0, show: function(d){ return d.props && d.props.areaGradient; } },
-					trendWindowMode: { ref: 'props.trendWindowMode', label: 'Trend Window', type: 'string', component: 'dropdown', options: [ { value: 'all', label: 'All data' }, { value: 'lastNPoints', label: 'Last N points' }, { value: 'lastNDays', label: 'Last N days' } ], defaultValue: 'all' },
-					trendWindowPoints: { ref: 'props.trendWindowPoints', label: 'N (points)', type: 'number', defaultValue: 60, show: function (d) { return d.props && d.props.trendWindowMode === 'lastNPoints'; } },
-					trendWindowDays: { ref: 'props.trendWindowDays', label: 'N (days)', type: 'number', defaultValue: 180, show: function (d) { return d.props && d.props.trendWindowMode === 'lastNDays'; } }
+					trendMode: { ref: 'props.trendMode', label: 'Trend Mode', type: 'string', component: 'dropdown', options: [ { value: 'line', label: 'Line' }, { value: 'area', label: 'Area' } ], defaultValue: 'line', show: function(layout) { return layout.props.showTrend; } },
+					trendCorners: { ref: 'props.trendCorners', label: 'Trend Corner Style', type: 'string', component: 'dropdown', options: [ { value: 'sharp', label: 'Sharp' }, { value: 'smooth', label: 'Smooth' } ], defaultValue: 'sharp', show: function(layout) { return layout.props.showTrend; } },
+					lineColor: { ref: 'props.lineColor', label: 'Trend Line Color', type: 'string', defaultValue: '#3f51b5', show: function(d) { return d && d.props && d.props.showTrend && d.props.theme === 'custom'; } },
+					lineWidth: { ref: 'props.lineWidth', label: 'Trend Line Width', type: 'number', defaultValue: 1.5, show: function(d) { return d && d.props && d.props.showTrend; } },
+					areaColor: { ref: 'props.areaColor', label: 'Area Fill Color', type: 'string', defaultValue: '#3f51b5', show: function(d) { return d && d.props && d.props.showTrend && d.props.theme === 'custom'; } },
+					areaOpacity: { ref: 'props.areaOpacity', label: 'Area Opacity (0-1)', type: 'number', defaultValue: 0.2, show: function(layout) { return layout.props.showTrend; } },
+					areaGradient: { ref: 'props.areaGradient', label: 'Area Gradient Fill', type: 'boolean', defaultValue: false, show: function(layout) { return layout.props.showTrend; } },
+					areaGradientType: { ref: 'props.areaGradientType', label: 'Gradient Type', type: 'string', component: 'dropdown', options: [ { value: 'vertical', label: 'Vertical' }, { value: 'horizontal', label: 'Horizontal' } ], defaultValue: 'vertical', show: function(d){ return d.props && d.props.areaGradient && d.props.showTrend; } },
+					areaGradStartColor: { ref: 'props.areaGradStartColor', label: 'Gradient Start Color', type: 'string', defaultValue: '#3f51b5', show: function(d){ return d.props && d.props.areaGradient && d.props.showTrend; } },
+					areaGradEndColor: { ref: 'props.areaGradEndColor', label: 'Gradient End Color', type: 'string', defaultValue: '#3f51b5', show: function(d){ return d.props && d.props.areaGradient && d.props.showTrend; } },
+					areaGradStartOpacity: { ref: 'props.areaGradStartOpacity', label: 'Gradient Start Opacity', type: 'number', defaultValue: 0.2, show: function(d){ return d.props && d.props.areaGradient && d.props.showTrend; } },
+					areaGradEndOpacity: { ref: 'props.areaGradEndOpacity', label: 'Gradient End Opacity', type: 'number', defaultValue: 0, show: function(d){ return d.props && d.props.areaGradient && d.props.showTrend; } },
+					trendWindowMode: { ref: 'props.trendWindowMode', label: 'Trend Window', type: 'string', component: 'dropdown', options: [ { value: 'all', label: 'All data' }, { value: 'lastNPoints', label: 'Last N points' }, { value: 'lastNDays', label: 'Last N days' } ], defaultValue: 'all', show: function(layout) { return layout.props.showTrend; } },
+					trendWindowPoints: { ref: 'props.trendWindowPoints', label: 'N (points)', type: 'number', defaultValue: 60, show: function (d) { return d.props && d.props.trendWindowMode === 'lastNPoints' && d.props.showTrend; } },
+					trendWindowDays: { ref: 'props.trendWindowDays', label: 'N (days)', type: 'number', defaultValue: 180, show: function (d) { return d.props && d.props.trendWindowMode === 'lastNDays' && d.props.showTrend; } },
+					showQuickButtons: { ref: 'props.showQuickButtons', label: 'Show Quick Trend Buttons', type: 'boolean', defaultValue: true, show: function(layout) { return layout.props.showTrend !== false; } },
+					button1Value: { ref: 'props.button1Value', label: 'Button 1 Value (points)', type: 'number', defaultValue: 12, show: function(d) { return d.props.showQuickButtons; } },
+					button1Label: { ref: 'props.button1Label', label: 'Button 1 Label', type: 'string', defaultValue: '12P', show: function(d) { return d.props.showQuickButtons; } },
+					button2Value: { ref: 'props.button2Value', label: 'Button 2 Value (points)', type: 'number', defaultValue: 60, show: function(d) { return d.props.showQuickButtons; } },
+					button2Label: { ref: 'props.button2Label', label: 'Button 2 Label', type: 'string', defaultValue: '60P', show: function(d) { return d.props.showQuickButtons; } },
+					button3Value: { ref: 'props.button3Value', label: 'Button 3 Value (points)', type: 'number', defaultValue: 365, show: function(d) { return d.props.showQuickButtons; } },
+					button3Label: { ref: 'props.button3Label', label: 'Button 3 Label', type: 'string', defaultValue: '1Y', show: function(d) { return d.props.showQuickButtons; } },
+					buttonStyle: { ref: 'props.buttonStyle', label: 'Button Style', type: 'string', component: 'dropdown', options: [ { value: 'minimal', label: 'Minimal' }, { value: 'rounded', label: 'Rounded' }, { value: 'pill', label: 'Pill' } ], defaultValue: 'rounded', show: function(d) { return d.props.showQuickButtons; } },
+					buttonBackgroundColor: { ref: 'props.buttonBackgroundColor', label: 'Inactive Button Background Color', type: 'string', defaultValue: 'rgba(255,255,255,0.1)', show: function(d) { return d.props.showQuickButtons; } },
+					buttonLabelColor: { ref: 'props.buttonLabelColor', label: 'Inactive Button Label Color', type: 'string', defaultValue: '', show: function(d) { return d.props.showQuickButtons; } },
+					buttonActiveColor: { ref: 'props.buttonActiveColor', label: 'Active Button Background Color', type: 'string', defaultValue: '#3b82f6', show: function(d) { return d.props.showQuickButtons; } },
+					buttonActiveLabelColor: { ref: 'props.buttonActiveLabelColor', label: 'Active Button Label Color', type: 'string', defaultValue: '#ffffff', show: function(d) { return d.props.showQuickButtons; } },
+					defaultButton: { ref: 'props.defaultButton', label: 'Default Selected Button', type: 'string', component: 'dropdown', options: [ { value: 'button1', label: 'Button 1 (12P)' }, { value: 'button2', label: 'Button 2 (60P)' }, { value: 'button3', label: 'Button 3 (1Y)' } ], defaultValue: 'button2', show: function(d) { return d.props.showQuickButtons; } },
+					currentSelectedButton: { ref: 'props.currentSelectedButton', label: 'Current Selected Button (Internal)', type: 'string', defaultValue: 'button2', show: function(d) { return false; } }
 				} },
 				// Labels Section
 				labelsSection: { type: 'items', label: 'Labels', items: {
@@ -1110,23 +1645,45 @@ define([
 					animateDelta: { ref: 'props.animateDelta', label: 'Animate Delta Change', type: 'boolean', defaultValue: false },
 					deltaAnimDuration: { ref: 'props.deltaAnimDuration', label: 'Delta Animation Duration (ms)', type: 'number', defaultValue: 600, show: function(d){ return d.props && d.props.animateDelta; } }
 				} },
-				// Quick Buttons Section
-				quickButtonsSection: { type: 'items', label: 'Quick Trend Buttons', items: {
-					showQuickButtons: { ref: 'props.showQuickButtons', label: 'Show Quick Trend Buttons', type: 'boolean', defaultValue: true },
-					button1Value: { ref: 'props.button1Value', label: 'Button 1 Value (points)', type: 'number', defaultValue: 12, show: function(d) { return d.props.showQuickButtons; } },
-					button1Label: { ref: 'props.button1Label', label: 'Button 1 Label', type: 'string', defaultValue: '12P', show: function(d) { return d.props.showQuickButtons; } },
-					button2Value: { ref: 'props.button2Value', label: 'Button 2 Value (points)', type: 'number', defaultValue: 60, show: function(d) { return d.props.showQuickButtons; } },
-					button2Label: { ref: 'props.button2Label', label: 'Button 2 Label', type: 'string', defaultValue: '60P', show: function(d) { return d.props.showQuickButtons; } },
-					button3Value: { ref: 'props.button3Value', label: 'Button 3 Value (points)', type: 'number', defaultValue: 365, show: function(d) { return d.props.showQuickButtons; } },
-					button3Label: { ref: 'props.button3Label', label: 'Button 3 Label', type: 'string', defaultValue: '1Y', show: function(d) { return d.props.showQuickButtons; } },
-					buttonStyle: { ref: 'props.buttonStyle', label: 'Button Style', type: 'string', component: 'dropdown', options: [ { value: 'minimal', label: 'Minimal' }, { value: 'rounded', label: 'Rounded' }, { value: 'pill', label: 'Pill' } ], defaultValue: 'rounded', show: function(d) { return d.props.showQuickButtons; } },
-					buttonBackgroundColor: { ref: 'props.buttonBackgroundColor', label: 'Inactive Button Background Color', type: 'string', defaultValue: 'rgba(255,255,255,0.1)', show: function(d) { return d.props.showQuickButtons; } },
-					buttonLabelColor: { ref: 'props.buttonLabelColor', label: 'Inactive Button Label Color', type: 'string', defaultValue: '', show: function(d) { return d.props.showQuickButtons; } },
-					buttonActiveColor: { ref: 'props.buttonActiveColor', label: 'Active Button Background Color', type: 'string', defaultValue: '#3b82f6', show: function(d) { return d.props.showQuickButtons; } },
-					buttonActiveLabelColor: { ref: 'props.buttonActiveLabelColor', label: 'Active Button Label Color', type: 'string', defaultValue: '#ffffff', show: function(d) { return d.props.showQuickButtons; } },
-					defaultButton: { ref: 'props.defaultButton', label: 'Default Selected Button', type: 'string', component: 'dropdown', options: [ { value: 'button1', label: 'Button 1 (12P)' }, { value: 'button2', label: 'Button 2 (60P)' }, { value: 'button3', label: 'Button 3 (1Y)' } ], defaultValue: 'button2', show: function(d) { return d.props.showQuickButtons; } },
-					currentSelectedButton: { ref: 'props.currentSelectedButton', label: 'Current Selected Button (Internal)', type: 'string', defaultValue: 'button2', show: function(d) { return false; } }
-				} }
+			} },
+			presetsPanel: { type: 'items', label: 'Config Presets', items: {
+				presetInfo: { component: 'text', label: 'Workflow: 1) Capture to copy current visual settings as JSON, 2) paste into another card and press Apply.' },
+				configPresetAction: { 
+					ref: 'props.configPresetAction', 
+					label: 'Preset Actions', 
+					type: 'string', 
+					component: 'buttongroup', 
+					options: [
+						{ value: 'capture', label: '1) Capture' },
+						{ value: 'apply', label: '2) Apply' }
+					],
+					defaultValue: '',
+					change: function(data, handler) {
+						const actionValue = data && data.props ? data.props.configPresetAction : '';
+						if (!data || !data.props) return;
+						try {
+							if (actionValue === 'capture') {
+								data.props.configPresetText = serializePresetProps(data.props);
+							} else if (actionValue === 'apply') {
+								const parsed = parsePresetText(data.props.configPresetText);
+								if (parsed) {
+									applyPresetToProps(data.props, parsed);
+								}
+							}
+						} catch (e) {
+							console.error('KPI Card preset action error', e);
+						} finally {
+							data.props.configPresetAction = '';
+							if (handler && typeof handler === 'function') {
+								handler();
+							}
+						}
+					}
+				},
+				configPresetText: { ref: 'props.configPresetText', label: 'Preset JSON', type: 'string', component: 'textarea', rows: 10, maxlength: 200000, defaultValue: '' }
+			} },
+			aboutPanel: { type: 'items', label: 'About', items: {
+				aboutDescription: { component: 'text', label: 'KPI Card delivers a modern KPI + trend experience with responsive typography, theming, quick presets, and click actions. Contact: https://www.linkedin.com/in/mfarsln/' }
 			} }
 		}
 	};
@@ -1214,7 +1771,7 @@ define([
 	 * @param {string} elementId - Unique element identifier for session storage
 	 */
 	function setupTrendWindow(layout, elementId) {
-		if (!layout.props.showQuickButtons) return;
+		if (!layout.props.showQuickButtons || layout.props.showTrend === false) return;
 		
 		// Priority: sessionStorage > currentSelectedButton > defaultButton
 		const sessionButton = getSelectedButton(elementId);
@@ -1253,64 +1810,39 @@ define([
 	 */
 	function calculateResponsiveFonts(layout, containerWidth, containerHeight) {
 		const isResponsive = layout.props.fontMode === 'responsive';
+		const secondaryRatio = 0.45;
 		
 		if (!isResponsive) {
+			const valuePxStatic = layout.props.valueFontSize || 28;
 			return {
 				titleFontSize: (layout.props.titleFontSize || 12) + 'px',
-				valueFontSize: (layout.props.valueFontSize || 28) + 'px',
+				valueFontSize: valuePxStatic + 'px',
 				deltaFontSize: (layout.props.deltaFontSize || 16) + 'px',
 				measureLabelFontSize: (layout.props.measureLabelSize || 11) + 'px',
-				labelFontSize: (layout.props.labelFontSize || 10) + 'px'
+				labelFontSize: (layout.props.labelFontSize || 10) + 'px',
+				secondaryFontSize: (layout.props.secondaryFontSize || (valuePxStatic * secondaryRatio)) + 'px'
 			};
 		}
 		
-		// Responsive calculations using container dimensions
-		const titleEm = Math.max(
-			CONSTANTS.RESPONSIVE_TITLE_MIN_EM,
-			Math.min(
-				CONSTANTS.RESPONSIVE_TITLE_MAX_EM,
-				(containerWidth * 0.0008) + (containerHeight * 0.0005) + 0.6
-			)
-		);
+		function clamp(value, min, max) {
+			return Math.max(min, Math.min(max, value));
+		}
 		
-		const valueEm = Math.max(
-			CONSTANTS.RESPONSIVE_VALUE_MIN_EM,
-			Math.min(
-				CONSTANTS.RESPONSIVE_VALUE_MAX_EM,
-				(containerWidth * 0.0025) + (containerHeight * 0.002) + 1.0
-			)
-		);
-		
-		const deltaEm = Math.max(
-			CONSTANTS.RESPONSIVE_DELTA_MIN_EM,
-			Math.min(
-				CONSTANTS.RESPONSIVE_DELTA_MAX_EM,
-				(containerWidth * 0.0015) + (containerHeight * 0.0012) + 0.8
-			)
-		);
-		
-		const measureLabelEm = Math.max(
-			CONSTANTS.RESPONSIVE_MEASURE_LABEL_MIN_EM,
-			Math.min(
-				CONSTANTS.RESPONSIVE_MEASURE_LABEL_MAX_EM,
-				(containerWidth * 0.0011) + (containerHeight * 0.0006) + 0.6
-			)
-		);
-		
-		const labelEm = Math.max(
-			CONSTANTS.RESPONSIVE_LABEL_MIN_EM,
-			Math.min(
-				CONSTANTS.RESPONSIVE_LABEL_MAX_EM,
-				(containerWidth * 0.0006) + (containerHeight * 0.0004) + 0.5
-			)
-		);
+		const shortSide = Math.max(80, Math.min(containerWidth, containerHeight));
+		const valuePx = clamp(shortSide * 0.125, 14, 96);
+		const titlePx = clamp(valuePx * 0.48, 11, valuePx * 0.78);
+		const deltaPx = clamp(valuePx * 0.65, 12, valuePx * 0.95);
+		const measureLabelPx = clamp(valuePx * 0.4, 10, valuePx * 0.65);
+		const dateLabelPx = clamp(valuePx * 0.36, 9, valuePx * 0.6);
+		const secondaryPx = clamp(valuePx * secondaryRatio, 10, valuePx * 0.72);
 		
 		return {
-			titleFontSize: titleEm + 'em',
-			valueFontSize: valueEm + 'em',
-			deltaFontSize: deltaEm + 'em',
-			measureLabelFontSize: measureLabelEm + 'em',
-			labelFontSize: labelEm + 'em'
+			titleFontSize: Math.round(titlePx) + 'px',
+			valueFontSize: Math.round(valuePx) + 'px',
+			deltaFontSize: Math.round(deltaPx) + 'px',
+			measureLabelFontSize: Math.round(measureLabelPx) + 'px',
+			labelFontSize: Math.round(dateLabelPx) + 'px',
+			secondaryFontSize: Math.round(secondaryPx) + 'px'
 		};
 	}
 
@@ -1327,8 +1859,8 @@ define([
 		const rows = processMatrixData(matrix);
 		
 		// Set up trend window based on quick buttons
-		const elementId = $element.attr('id') || $element.data('qv-object') || 'default';
-		setupTrendWindow(layout, elementId);
+		const renderElementId = (layout && layout.qInfo && layout.qInfo.qId) || $element.attr('id') || $element.data('qv-object') || 'default';
+		setupTrendWindow(layout, renderElementId);
 		
 		// Process data and calculate values
 		const fullRows = rows.slice(0);
@@ -1347,38 +1879,77 @@ define([
 			(layout.props.align === 'right' ? 'right' : 'left');
 		
 		// Container dimensions and styling
-		const containerHeight = $element.height() || window.innerHeight;
-		const containerWidth = $element.width() || window.innerWidth;
-		const kpiSectionHeight = layout.props.kpiSectionHeight || CONSTANTS.DEFAULT_KPI_SECTION_HEIGHT;
-		const trendSectionHeight = layout.props.trendSectionHeight || CONSTANTS.DEFAULT_TREND_SECTION_HEIGHT;
+		const elementNode = $element && $element[0];
+		const elementId = (layout && layout.qInfo && layout.qInfo.qId) || (elementNode && elementNode.getAttribute && elementNode.getAttribute('data-qv-object')) || (elementNode && elementNode.id) || 'kpi-card-default';
+		let containerWidth = $element.width() || window.innerWidth;
+		let containerHeight = $element.height() || window.innerHeight;
+		if (elementNode && elementNode.getBoundingClientRect) {
+			const elementRect = elementNode.getBoundingClientRect();
+			if (elementRect && elementRect.width && elementRect.height) {
+				containerWidth = elementRect.width;
+				containerHeight = elementRect.height;
+			} else if (elementNode.parentElement && elementNode.parentElement.getBoundingClientRect) {
+				const parentRect = elementNode.parentElement.getBoundingClientRect();
+				if (parentRect && parentRect.width && parentRect.height) {
+					containerWidth = parentRect.width;
+					containerHeight = parentRect.height;
+				}
+			}
+		}
+		containerWidth = Math.max(1, containerWidth);
+		containerHeight = Math.max(1, containerHeight);
 		
-		const containerStyle = `position:relative;width:100%;height:100%;text-align:${alignCss};display:grid;grid-template-rows:${kpiSectionHeight}% ${trendSectionHeight}%;gap:0;align-items:stretch;`;
+		if (layout.props.fontMode === 'responsive') {
+			const state = responsiveObserverState[elementId] || {};
+			state.size = { width: containerWidth, height: containerHeight };
+			state.layout = layout;
+			state.matrix = matrix;
+			state.element = elementNode || state.element;
+			responsiveObserverState[elementId] = state;
+		}
+		const showTrend = layout.props.showTrend !== false; // Default to true if not set
+		const kpiSectionHeight = layout.props.kpiSectionHeight || CONSTANTS.DEFAULT_KPI_SECTION_HEIGHT;
+		const trendSectionHeight = showTrend ? (layout.props.trendSectionHeight || CONSTANTS.DEFAULT_TREND_SECTION_HEIGHT) : 0;
+		
+		// Adjust grid template based on whether trend is shown
+		const gridTemplateRows = showTrend ? 
+			`${kpiSectionHeight}% ${trendSectionHeight}%` : 
+			`100%`;
+		const containerStyle = `position:relative;width:100%;height:100%;display:grid;grid-template-rows:${gridTemplateRows};gap:0;align-items:stretch;`;
 		const darkModeClass = layout.props.darkMode ? ' ' + CONSTANTS.DARK_MODE_CLASS : '';
 		
 		// Calculate responsive font sizes
 		const fontSizes = calculateResponsiveFonts(layout, containerWidth, containerHeight);
 		
 		// Generate HTML content
+		const backgroundOverride = getConditionalBackground(layout, currentVal);
 		const titleHtml = generateTitleHtml(layout, colors, fontSizes);
 		const valueHtml = generateValueHtml(layout, colors, fontSizes, currentVal, measInfo);
-		const deltaHtml = generateDeltaHtml(layout, colors, fontSizes, fullRows);
+		const deltaData = computeDeltaFromRows(fullRows, layout.props.deltaPoints, layout.props.deltaAgg || 'last', layout.props.deltaOffset);
+		const deltaHtml = generateDeltaHtml(layout, colors, fontSizes, fullRows, measInfo, deltaData);
+		const secondaryValue = layout.props.showSecondaryKpi && deltaData ? deltaData.prev : null;
+		const secondaryHtml = generateSecondaryKpiHtml(layout, colors, fontSizes, secondaryValue, measInfo);
 		const measureLabelHtml = generateMeasureLabelHtml(layout, colors, fontSizes);
 		const labelsHtml = generateLabelsHtml(layout, colors, fontSizes, startLabel, endLabel);
 		const sparkHtml = generateSparklineHtml(layout, containerHeight, trendSectionHeight);
-		const quickButtonsHtml = generateQuickButtonsHtml(layout, elementId);
+		const quickButtonsHtml = generateQuickButtonsHtml(layout, renderElementId);
 		
 		// Build final HTML
 		const html = buildFinalHtml(
 			darkModeClass, containerStyle, layout, colors,
 			titleHtml, valueHtml, deltaHtml, measureLabelHtml,
-			labelsHtml, sparkHtml, quickButtonsHtml
+			labelsHtml, sparkHtml, quickButtonsHtml, secondaryHtml, backgroundOverride, fullRows, deltaData
 		);
 		
 		// Render to DOM
 		$element.html(html);
 		
-		// Set up sparkline
-		setupSparkline($element, dataPairs, layout, measInfo, colors);
+		setupResponsiveObserver($element, layout, matrix);
+		
+		// Set up sparkline (only if trend is shown)
+		if (layout.props.showTrend !== false) {
+			setupSparkline($element, dataPairs, layout, measInfo, colors);
+		}
 		
 		// Set up event handlers
 		setupEventHandlers($element, layout, matrix);
@@ -1387,6 +1958,299 @@ define([
 		triggerAnimations($element, layout, currentVal, measInfo);
 	}
 
+	/**
+	 * Generates icon HTML based on icon type
+	 * @param {string} iconType - Icon type
+	 * @param {string} position - Icon position
+	 * @param {Object} colors - Color configuration
+	 * @returns {string} Icon HTML
+	 */
+	function generateIconHtml(layout, position, colors) {
+		if (!layout.props.showIcon) return '';
+		
+		const selectedPosition = layout.props.iconPosition || 'top-right';
+		if (position !== selectedPosition) return '';
+		
+		const iconPack = layout.props.iconPack || 'emoji';
+		const iconSize = layout.props.iconSize || (position.startsWith('top') ? 24 : 18);
+		const iconColor = colors.valueColor || '#111111';
+		
+		let iconMarkup = '';
+		if (iconPack === 'custom') {
+		let customIcon = decodeCustomMarkup(layout.props.iconCustom || '').trim();
+			if (!customIcon) return '';
+
+		// Attempt to extract the first SVG tag to avoid editor wrappers
+		const svgMatch = customIcon.match(/<svg[\s\S]*?<\/svg>/i);
+		if (svgMatch) {
+			customIcon = svgMatch[0];
+		}
+
+		iconMarkup = sanitizeSvgMarkup(customIcon, iconSize);
+		} else if (iconPack === 'modern') {
+			const iconType = layout.props.iconType || 'trend-up';
+			if (MODERN_ICON_MAP[iconType]) {
+				const iconDef = MODERN_ICON_MAP[iconType];
+				const paths = iconDef.paths.map(function(d) {
+					return `<path d="${d}" fill="none" stroke="currentColor" stroke-width="${Math.max(1.5, iconSize / 16)}" stroke-linecap="round" stroke-linejoin="round"></path>`;
+				}).join('');
+				iconMarkup = `<svg width="${iconSize}" height="${iconSize}" viewBox="${iconDef.viewBox}" stroke="${iconColor}" fill="none">${paths}</svg>`;
+			} else {
+				iconMarkup = `<span style="font-size:${iconSize}px;line-height:1;">${EMOJI_ICON_MAP.chart}</span>`;
+			}
+		} else {
+			const iconType = layout.props.iconType || 'chart';
+			const emojiIcon = EMOJI_ICON_MAP[iconType] || EMOJI_ICON_MAP.chart;
+			iconMarkup = `<span style="font-size:${iconSize}px;line-height:1;">${emojiIcon}</span>`;
+		}
+		
+		let style = `--icon-size:${iconSize}px;`;
+		switch (position) {
+			case 'top-left':
+				style += `position:absolute;top:8px;left:8px;font-size:${iconSize}px;opacity:0.75;z-index:5;`;
+				break;
+			case 'top-right':
+				style += `position:absolute;top:8px;right:8px;font-size:${iconSize}px;opacity:0.75;z-index:5;`;
+				break;
+			case 'before-title':
+				style += `display:inline-flex;align-items:center;margin-right:6px;opacity:0.9;`;
+				break;
+			case 'after-title':
+				style += `display:inline-flex;align-items:center;margin-left:6px;opacity:0.9;`;
+				break;
+			case 'value-right':
+				style += `display:inline-flex;align-items:center;justify-content:center;opacity:0.95;`;
+				break;
+			default:
+				style += `display:inline-flex;align-items:center;margin-right:6px;opacity:0.9;`;
+		}
+		
+		const extraClass = position === 'value-right' ? ' kpi-card__icon--value' : '';
+		return `<span class="kpi-card__icon${extraClass}" style="${style}">${iconMarkup}</span>`;
+	}
+
+	function evaluateCondition(value, operator, v1, v2) {
+		if (value === null || value === undefined || isNaN(value)) return false;
+		const numValue = Number(value);
+		const a = Number(v1);
+		const b = Number(v2);
+		switch (operator) {
+			case 'gte': return numValue >= a;
+			case 'gt': return numValue > a;
+			case 'lte': return numValue <= a;
+			case 'lt': return numValue < a;
+			case 'eq': return numValue === a;
+			case 'between':
+				if (isNaN(a) || isNaN(b)) return false;
+				const min = Math.min(a, b);
+				const max = Math.max(a, b);
+				return numValue >= min && numValue <= max;
+			default:
+				return false;
+		}
+	}
+
+	function getConditionalBackground(layout, currentVal) {
+		if (!layout.props.enableBackgroundCondition) return null;
+		const op = layout.props.backgroundConditionOperator || 'gt';
+		const v1 = layout.props.backgroundConditionValue;
+		const v2 = layout.props.backgroundConditionValue2;
+		if (!evaluateCondition(currentVal, op, v1, v2)) return null;
+		return layout.props.backgroundConditionColor || '#1f2937';
+	}
+
+	
+	/**
+	 * Checks if the card is currently selected in Qlik Sense
+	 * @param {Object} layout - Layout configuration
+	 * @returns {boolean|Promise<boolean>} True if selected (can be async)
+	 */
+	function checkIfSelected(layout) {
+		if (!layout || !layout.props.enableClick) {
+			return false;
+		}
+		
+		const clickAction = layout.props.clickAction || 'select-field-value';
+		// console.log('KPI Card: Checking selection status. Action:', clickAction);
+		
+		// For select-field-value: Check if the specified field has the specified value selected
+		if (clickAction === 'select-field-value' && layout.props.selectFieldName && layout.props.selectFieldName.trim() !== '') {
+			try {
+				if (qlik) {
+					const app = qlik.currApp();
+					if (app) {
+						// Use selectionState instead of field.getSelected
+						const selectionState = app.selectionState();
+						const selections = selectionState.selections;
+						const fieldName = layout.props.selectFieldName;
+						
+						// Find if our field is in the selections
+						const fieldSelection = selections.filter(function(s) { return s.fieldName === fieldName; })[0];
+						
+						if (!fieldSelection) {
+							return false;
+						}
+						
+						const expectedValue = layout.props.selectFieldValue;
+						
+						// If no specific value is required, any selection on this field counts as selected
+						if (expectedValue === undefined || expectedValue === null || (typeof expectedValue === 'string' && expectedValue.trim() === '')) {
+							return true;
+						}
+						
+						// Check if expected value is in the selected values
+						// Normalize expected value to string and trim
+						const expectedValStr = String(expectedValue).trim().toLowerCase();
+						
+						const isMatch = fieldSelection.selectedValues.some(function(item) {
+							const itemVal = item.qName; // selectedValues usually has qName
+							return itemVal && String(itemVal).trim().toLowerCase() === expectedValStr;
+						});
+						
+						return isMatch;
+					}
+				}
+			} catch (e) {
+				console.error('KPI Card: Error checking field selection', e);
+				return false;
+			}
+		}
+		
+		// For change-variable: Check if the variable has the specified value
+		if (clickAction === 'change-variable' && layout.props.variableName && layout.props.variableName.trim() !== '') {
+			try {
+				if (qlik) {
+					const app = qlik.currApp();
+					if (app) {
+						return app.variable.getContent(layout.props.variableName).then(function(result) {
+							// console.log('KPI Card: Variable content:', result);
+							// Handle different return structures of getContent
+							let currentContent = '';
+							if (result) {
+								if (typeof result === 'string' || typeof result === 'number') {
+									currentContent = result.toString();
+								} else if (result.qContent) {
+									if (result.qContent.qString !== undefined) {
+										currentContent = result.qContent.qString;
+									} else {
+										currentContent = result.qContent.toString();
+									}
+								} else if (result.qString !== undefined) {
+									currentContent = result.qString;
+								}
+							}
+
+							const expectedValue = layout.props.variableValue;
+							
+							// If no specific value is required, any non-empty value counts
+							if (expectedValue === undefined || expectedValue === null || (typeof expectedValue === 'string' && expectedValue.trim() === '')) {
+								return currentContent !== '';
+							}
+							
+							// Check if variable value matches expected value (case-insensitive)
+							const isMatch = String(currentContent).trim().toLowerCase() === String(expectedValue).trim().toLowerCase();
+							return isMatch;
+						}).catch(function() {
+							return false;
+						});
+					}
+				}
+			} catch (e) {
+				console.error('KPI Card: Error checking variable content', e);
+				return false;
+			}
+		}
+		
+		return false;
+	}
+	
+	/**
+	 * Gets selected indicator style based on selected indicator type
+	 * @param {Object} layout - Layout configuration
+	 * @param {Object} colors - Color configuration
+	 * @returns {string} Selected indicator style
+	 */
+	function getSelectedIndicatorStyle(layout, colors) {
+		const indicatorType = layout.props.selectedIndicator || 'bottom-border';
+		const selectedColor = layout.props.selectedColor || '#3b82f6';
+		
+		// Convert hex color to rgba for background tint
+		function hexToRgba(hex, alpha) {
+			if (!hex || hex.length < 7) return `rgba(59, 130, 246, ${alpha})`;
+			const r = parseInt(hex.slice(1, 3), 16);
+			const g = parseInt(hex.slice(3, 5), 16);
+			const b = parseInt(hex.slice(5, 7), 16);
+			return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+		}
+		
+		switch (indicatorType) {
+			case 'border':
+				return `border:3px solid ${selectedColor} !important;`;
+			case 'bottom-border':
+				return `border-bottom:4px solid ${selectedColor} !important;`;
+			case 'top-border':
+				return `border-top:4px solid ${selectedColor} !important;`;
+			case 'glow':
+				return `box-shadow:0 0 20px ${selectedColor}, inset 0 0 20px ${hexToRgba(selectedColor, 0.25)} !important;`;
+			case 'background':
+				return `background:${hexToRgba(selectedColor, 0.15)} !important;`;
+			default:
+				return `border-bottom:4px solid ${selectedColor} !important;`;
+		}
+	}
+	
+	/**
+	 * Generates status badge HTML based on delta
+	 * @param {Object} layout - Layout configuration
+	 * @param {Object} colors - Color configuration
+	 * @param {Array} fullRows - Full rows data
+	 * @returns {string} Status badge HTML
+	 */
+	function generateStatusBadgeHtml(layout, colors, fullRows, precomputedDelta) {
+		if (!layout.props.showStatusBadge || !layout.props.showDelta) return '';
+		
+		const delta = precomputedDelta || computeDeltaFromRows(fullRows, layout.props.deltaPoints, layout.props.deltaAgg || 'last', layout.props.deltaOffset);
+		if (!delta) return '';
+		
+		const diff = delta.curr - delta.prev;
+		const displayType = layout.props.deltaDisplayType || 'percentage';
+		
+		let status, badgeColor, badgeText;
+		if (displayType === 'absolute') {
+			if (diff > 0) {
+				status = 'positive';
+				badgeColor = colors.deltaUpColor;
+				badgeText = '▲';
+			} else if (diff < 0) {
+				status = 'negative';
+				badgeColor = colors.deltaDownColor;
+				badgeText = '▼';
+			} else {
+				status = 'neutral';
+				badgeColor = colors.deltaNeutralColor;
+				badgeText = '■';
+			}
+		} else {
+			if (delta.prev === 0) return '';
+			const pct = (diff / Math.abs(delta.prev)) * 100;
+			if (pct > 0) {
+				status = 'positive';
+				badgeColor = colors.deltaUpColor;
+				badgeText = '▲';
+			} else if (pct < 0) {
+				status = 'negative';
+				badgeColor = colors.deltaDownColor;
+				badgeText = '▼';
+			} else {
+				status = 'neutral';
+				badgeColor = colors.deltaNeutralColor;
+				badgeText = '■';
+			}
+		}
+		
+		return `<div class="kpi-card__status-badge" style="width:32px;height:32px;border-radius:50%;background:${badgeColor};opacity:0.25;display:flex;align-items:center;justify-content:center;font-size:16px;color:${badgeColor};border:2px solid ${badgeColor};">${badgeText}</div>`;
+	}
+	
 	/**
 	 * Generates title HTML
 	 * @param {Object} layout - Layout configuration
@@ -1397,7 +2261,11 @@ define([
 	function generateTitleHtml(layout, colors, fontSizes) {
 		if (!layout.props || !layout.props.title) return '';
 		
-		return `<div class="kpi-card__title" style="font-size:${fontSizes.titleFontSize};font-family:${layout.props.titleFontFamily || CONSTANTS.DEFAULT_FONT_FAMILY};color:${colors.titleColor};">${layout.props.title}</div>`;
+		const iconBefore = generateIconHtml(layout, 'before-title', colors);
+		const iconAfter = generateIconHtml(layout, 'after-title', colors);
+		const titleContent = `${iconBefore}${layout.props.title}${iconAfter}`;
+		
+		return `<div class="kpi-card__title" style="font-size:${fontSizes.titleFontSize};font-family:${layout.props.titleFontFamily || CONSTANTS.DEFAULT_FONT_FAMILY};color:${colors.titleColor};">${titleContent}</div>`;
 	}
 
 	/**
@@ -1413,7 +2281,7 @@ define([
 		const animationStyle = layout.props.animateValue ? 
 			`opacity:0;transform:scale(0.8);transition:opacity ${layout.props.valueAnimDuration || CONSTANTS.DEFAULT_VALUE_ANIMATION_DURATION}ms ease,transform ${layout.props.valueAnimDuration || CONSTANTS.DEFAULT_VALUE_ANIMATION_DURATION}ms ease;` : '';
 		
-		const displayValue = layout.props.animateValue ? '0' : formatNumber(currentVal, measInfo, layout);
+		const displayValue = layout.props.animateValue ? '0' : formatNumber(currentVal, measInfo, layout, false, layout.props.kpiDecimalPlaces ?? 0);
 		
 		return `<div class="kpi-card__value" style="font-size:${fontSizes.valueFontSize};font-family:${layout.props.valueFontFamily || CONSTANTS.DEFAULT_FONT_FAMILY};color:${colors.valueColor};display:inline-block;${animationStyle}">${displayValue}</div>`;
 	}
@@ -1424,27 +2292,69 @@ define([
 	 * @param {Object} colors - Color configuration
 	 * @param {Object} fontSizes - Font size configuration
 	 * @param {Array} fullRows - Full rows data
+	 * @param {Object} measInfo - Measure information
 	 * @returns {string} Delta HTML
 	 */
-	function generateDeltaHtml(layout, colors, fontSizes, fullRows) {
+	function generateDeltaHtml(layout, colors, fontSizes, fullRows, measInfo, precomputedDelta) {
 		if (!layout.props.showDelta) return '';
 		
-		const delta = computeDeltaFromRows(fullRows, layout.props.deltaPoints, layout.props.deltaAgg || 'last', layout.props.deltaOffset);
-		if (!delta || delta.prev === 0) return '';
+		const delta = precomputedDelta || computeDeltaFromRows(fullRows, layout.props.deltaPoints, layout.props.deltaAgg || 'last', layout.props.deltaOffset);
+		if (!delta) return '';
 		
 		const diff = delta.curr - delta.prev;
-		const pct = (diff / Math.abs(delta.prev)) * 100;
-		const sign = pct > 0 ? '▲' : (pct < 0 ? '▼' : '■');
-		const col = pct > 0 ? layout.props.deltaUpColor : (pct < 0 ? layout.props.deltaDownColor : layout.props.deltaNeutralColor);
+		const displayType = layout.props.deltaDisplayType || 'percentage';
 		const decimals = layout.props.deltaDecimals || CONSTANTS.DEFAULT_DELTA_DECIMALS;
 		const factor = Math.pow(10, decimals);
-		const pctStr = (Math.round(pct * factor) / factor).toFixed(decimals) + '%';
+		
+		// Use colors passed from getEffectiveColors (theme-aware)
+		let displayValue, sign, col;
+		
+		if (displayType === 'absolute') {
+			// Absolute change - use delta format setting
+			const absDiff = Math.abs(diff);
+			displayValue = formatNumber(absDiff, measInfo, layout, true); // isDelta = true
+			sign = diff > 0 ? '▲' : (diff < 0 ? '▼' : '■');
+			col = diff > 0 ? colors.deltaUpColor : (diff < 0 ? colors.deltaDownColor : colors.deltaNeutralColor);
+		} else {
+			// Percentage change
+			if (delta.prev === 0) return '';
+			const pct = (diff / Math.abs(delta.prev)) * 100;
+			displayValue = (Math.round(pct * factor) / factor).toFixed(decimals) + '%';
+			sign = pct > 0 ? '▲' : (pct < 0 ? '▼' : '■');
+			col = pct > 0 ? colors.deltaUpColor : (pct < 0 ? colors.deltaDownColor : colors.deltaNeutralColor);
+		}
 		
 		// Set initial animation state if delta animation is enabled
 		const animationStyle = layout.props.animateDelta ? 
 			`opacity:0;transform:translateX(-10px);transition:opacity ${layout.props.deltaAnimDuration || CONSTANTS.DEFAULT_DELTA_ANIMATION_DURATION}ms ease,transform ${layout.props.deltaAnimDuration || CONSTANTS.DEFAULT_DELTA_ANIMATION_DURATION}ms ease;` : '';
 		
-		return `<div class="kpi-card__delta" style="display:inline-block;margin-left:${layout.props.deltaGap || CONSTANTS.DEFAULT_DELTA_GAP}px;color:${col};font-size:${fontSizes.deltaFontSize};font-family:${layout.props.deltaFontFamily || CONSTANTS.DEFAULT_FONT_FAMILY};${animationStyle}">${sign} ${pctStr}</div>`;
+		return `<div class="kpi-card__delta" style="display:inline-block;margin-left:${layout.props.deltaGap || CONSTANTS.DEFAULT_DELTA_GAP}px;color:${col};font-size:${fontSizes.deltaFontSize};font-family:${layout.props.deltaFontFamily || CONSTANTS.DEFAULT_FONT_FAMILY};${animationStyle}">${sign} ${displayValue}</div>`;
+	}
+
+	/**
+	 * Generates secondary KPI HTML (previous period)
+	 * @param {Object} layout - Layout configuration
+	 * @param {Object} colors - Color configuration
+	 * @param {Object} fontSizes - Font size configuration
+	 * @param {number|null} secondaryValue - Secondary value to display
+	 * @param {Object} measInfo - Measure information
+	 * @returns {string} Secondary KPI HTML
+	 */
+	function generateSecondaryKpiHtml(layout, colors, fontSizes, secondaryValue, measInfo) {
+		if (!layout.props.showSecondaryKpi) return '';
+		
+		const label = layout.props.secondaryLabel || 'Previous Period';
+		const color = layout.props.secondaryColor || '#94a3b8';
+		const primarySizePx = parseFloat(fontSizes.valueFontSize) || layout.props.valueFontSize || 28;
+		const fallbackSecondaryPx = layout.props.secondaryFontSize || (primarySizePx * 0.45);
+		const fallbackFontSize = fallbackSecondaryPx + 'px';
+		const fontSizeValue = fontSizes.secondaryFontSize || fallbackFontSize;
+		const fontFamily = layout.props.secondaryFontFamily || layout.props.valueFontFamily || CONSTANTS.DEFAULT_FONT_FAMILY;
+		const decimals = layout.props.secondaryDecimalPlaces ?? layout.props.kpiDecimalPlaces ?? 0;
+		const formatted = (secondaryValue !== null && secondaryValue !== undefined) ? formatNumber(secondaryValue, measInfo, layout, false, decimals) : '-';
+		const italicLabel = `<span style="font-style:italic;">${label}</span>`;
+		
+		return `<div class="kpi-card__secondary" style="margin-top:4px;color:${color};font-size:${fontSizeValue};font-family:${fontFamily};opacity:0.9;">${italicLabel}: ${formatted}</div>`;
 	}
 
 	/**
@@ -1506,7 +2416,7 @@ define([
 	 * @returns {string} Quick buttons HTML
 	 */
 	function generateQuickButtonsHtml(layout, elementId) {
-		if (!layout.props.showQuickButtons) return '';
+		if (!layout.props.showQuickButtons || layout.props.showTrend === false) return '';
 		
 		const buttonStyle = layout.props.buttonStyle || CONSTANTS.DEFAULT_BUTTON_STYLE;
 		const buttonClass = `kpi-card__quick-btn kpi-card__quick-btn--${buttonStyle}`;
@@ -1534,7 +2444,7 @@ define([
 		const isButton2Active = (currentButton === 'button2') ? CONSTANTS.ACTIVE_CLASS : '';
 		const isButton3Active = (currentButton === 'button3') ? CONSTANTS.ACTIVE_CLASS : '';
 		
-		return `<div class="kpi-card__quick-buttons" style="position:absolute;top:8px;right:8px;z-index:10;display:flex;gap:4px;">` +
+		return `<div class="kpi-card__quick-buttons" style="display:flex;gap:4px;">` +
 			`<button class="${buttonClass} ${isButton1Active}" data-value="${layout.props.button1Value || CONSTANTS.DEFAULT_BUTTON1_VALUE}" data-active-color="${activeColor}" data-active-label-color="${activeLabelColor}" style="${buttonStyleCss}padding:4px 8px;font-size:10px;cursor:pointer;transition:all 0.2s ease;">${layout.props.button1Label || CONSTANTS.DEFAULT_BUTTON1_LABEL}</button>` +
 			`<button class="${buttonClass} ${isButton2Active}" data-value="${layout.props.button2Value || CONSTANTS.DEFAULT_BUTTON2_VALUE}" data-active-color="${activeColor}" data-active-label-color="${activeLabelColor}" style="${buttonStyleCss}padding:4px 8px;font-size:10px;cursor:pointer;transition:all 0.2s ease;">${layout.props.button2Label || CONSTANTS.DEFAULT_BUTTON2_LABEL}</button>` +
 			`<button class="${buttonClass} ${isButton3Active}" data-value="${layout.props.button3Value || CONSTANTS.DEFAULT_BUTTON3_VALUE}" data-active-color="${activeColor}" data-active-label-color="${activeLabelColor}" style="${buttonStyleCss}padding:4px 8px;font-size:10px;cursor:pointer;transition:all 0.2s ease;">${layout.props.button3Label || CONSTANTS.DEFAULT_BUTTON3_LABEL}</button>` +
@@ -1554,36 +2464,154 @@ define([
 	 * @param {string} labelsHtml - Labels HTML
 	 * @param {string} sparkHtml - Sparkline HTML
 	 * @param {string} quickButtonsHtml - Quick buttons HTML
+	 * @param {Array} fullRows - Full rows data for status badge
 	 * @returns {string} Final HTML
 	 */
-	function buildFinalHtml(darkModeClass, containerStyle, layout, colors, titleHtml, valueHtml, deltaHtml, measureLabelHtml, labelsHtml, sparkHtml, quickButtonsHtml) {
+	function buildFinalHtml(darkModeClass, containerStyle, layout, colors, titleHtml, valueHtml, deltaHtml, measureLabelHtml, labelsHtml, sparkHtml, quickButtonsHtml, secondaryHtml, backgroundOverride, fullRows, deltaData) {
 		const padding = layout.props.padding || CONSTANTS.DEFAULT_PADDING;
 		const borderWidth = layout.props.borderWidth || CONSTANTS.DEFAULT_BORDER_WIDTH;
 		const borderRadius = layout.props.borderRadius || CONSTANTS.DEFAULT_BORDER_RADIUS;
-		const alignCss = (layout.props.align === 'center') ? 'center' : (layout.props.align === 'right' ? 'right' : 'left');
+		
+		// Determine alignment CSS values
+		const alignValue = layout.props.align || 'left';
+		const alignItemsCss = alignValue === 'center' ? 'center' : (alignValue === 'right' ? 'flex-end' : 'flex-start');
 		
 		// Build value block with measure label positioning
 		const valueWithDelta = `<div style="position:relative; z-index:1; display:inline-flex;align-items:baseline;">${valueHtml}${deltaHtml}</div>`;
+		const inlineIconHtml = generateIconHtml(layout, 'value-right', colors);
+		const valueContent = inlineIconHtml ? `<div class="kpi-card__value-row">${valueWithDelta}${inlineIconHtml}</div>` : valueWithDelta;
 		const headerGap = layout.props.headerGapPx || CONSTANTS.DEFAULT_HEADER_GAP;
 		
 		let valueBlock;
 		switch (layout.props.measureLabelPos) {
 			case 'top':
-				valueBlock = `<div>${measureLabelHtml}<div style="height:${headerGap}px"></div>${valueWithDelta}</div>`;
+				valueBlock = `<div style="display:flex;flex-direction:column;align-items:${alignItemsCss}">${measureLabelHtml}<div style="height:${headerGap}px"></div>${valueContent}</div>`;
 				break;
 			case 'left':
-				valueBlock = `<div style="display:flex;align-items:baseline;gap:${headerGap}px;justify-content:${alignCss}">${measureLabelHtml}${valueWithDelta}</div>`;
+				valueBlock = `<div style="display:flex;align-items:baseline;gap:${headerGap}px;justify-content:${alignItemsCss}">${measureLabelHtml}${valueContent}</div>`;
 				break;
 			case 'right':
-				valueBlock = `<div style="display:flex;align-items:baseline;gap:${headerGap}px;justify-content:${alignCss}">${valueWithDelta}${measureLabelHtml}</div>`;
+				valueBlock = `<div style="display:flex;align-items:baseline;gap:${headerGap}px;justify-content:${alignItemsCss}">${valueContent}${measureLabelHtml}</div>`;
 				break;
 			default:
-				valueBlock = `<div>${valueWithDelta}<div style="height:${headerGap}px"></div>${measureLabelHtml}</div>`;
+				valueBlock = `<div style="display:flex;flex-direction:column;align-items:${alignItemsCss}">${valueContent}<div style="height:${headerGap}px"></div>${measureLabelHtml}</div>`;
 		}
 		
-		return `<div class="kpi-card${darkModeClass}" style="${containerStyle}">` +
-			`<div class="kpi-card__kpi-section" style="position:relative;padding:${padding}px;background:${colors.backgroundColor};border:${borderWidth}px solid ${colors.borderColor};border-radius:${borderRadius}px;border-bottom:none;border-bottom-left-radius:0;border-bottom-right-radius:0;">${titleHtml}${valueBlock}${quickButtonsHtml}</div>` +
-			`<div class="kpi-card__trend-section" style="position:relative;background:${colors.backgroundColor};border:${borderWidth}px solid ${colors.borderColor};border-radius:${borderRadius}px;border-top:none;border-top-left-radius:0;border-top-right-radius:0;">${sparkHtml}${labelsHtml}</div>` +
+		// Build content wrapper with title and value block, aligned together
+		// Add gap between title and value block if title exists
+		const titleGap = titleHtml ? `<div style="height:${headerGap}px"></div>` : '';
+		const contentWrapper = `<div style="display:flex;flex-direction:column;align-items:${alignItemsCss};width:100%;">${titleHtml}${titleGap}${valueBlock}${secondaryHtml}</div>`;
+		
+		const showTrend = layout.props.showTrend !== false; // Default to true if not set
+		const kpiBorderStyle = showTrend ? 
+			`border-bottom:none;border-bottom-left-radius:0;border-bottom-right-radius:0;` : 
+			``;
+		const trendBorderStyle = showTrend ? 
+			`border-top:none;border-top-left-radius:0;border-top-right-radius:0;` : 
+			``;
+		
+		// Add glass morphism effect if glass theme is selected
+		const isGlassTheme = layout.props.theme === 'glass';
+		const glassEffect = isGlassTheme ? 'backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 8px 32px 0 rgba(31, 38, 135, 0.37);' : '';
+		const glassEffectTrend = isGlassTheme ? 'backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);' : '';
+		
+		// Generate gradient background if enabled - apply to MAIN CONTAINER only
+		const gradientEnabled = layout.props.useGradient === true;
+		let containerBackgroundStyle = `background:${colors.backgroundColor};`;
+		if (gradientEnabled) {
+			let gradientStart = colors.gradientStart || layout.props.gradientStart || colors.backgroundColor;
+			let gradientEnd = colors.gradientEnd || layout.props.gradientEnd || colors.backgroundColor;
+			let gradientDirection = layout.props.gradientDirection || 'vertical';
+			const presetName = layout.props.gradientPreset || 'custom';
+			if (presetName !== 'custom') {
+				const preset = GRADIENT_PRESETS.find(p => p.value === presetName);
+				if (preset) {
+					gradientStart = preset.start;
+					gradientEnd = preset.end;
+					gradientDirection = preset.direction || 'vertical';
+				}
+			}
+			let gradientCss = '';
+			switch (gradientDirection) {
+				case 'horizontal':
+					gradientCss = `linear-gradient(to right, ${gradientStart}, ${gradientEnd})`;
+					break;
+				case 'diagonal':
+					gradientCss = `linear-gradient(to bottom right, ${gradientStart}, ${gradientEnd})`;
+					break;
+				case 'radial':
+					gradientCss = `radial-gradient(circle, ${gradientStart}, ${gradientEnd})`;
+					break;
+				default: // vertical
+					gradientCss = `linear-gradient(to bottom, ${gradientStart}, ${gradientEnd})`;
+			}
+			containerBackgroundStyle = `background:${gradientCss} !important;`;
+		}
+		if (backgroundOverride) {
+			containerBackgroundStyle = `background:${backgroundOverride} !important;`;
+		}
+		
+		// Section backgrounds should be transparent when gradient or conditional background is used
+		const sectionBackgroundStyle = (gradientEnabled || backgroundOverride) ? 'background:transparent !important;' : `background:${colors.backgroundColor};`;
+		
+		// Generate elevation/shadow styles - apply to MAIN CONTAINER
+		let containerElevationStyle = '';
+		const elevation = layout.props.cardElevation || 'none';
+		switch (elevation) {
+			case 'subtle':
+				containerElevationStyle = 'box-shadow:0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);';
+				break;
+			case 'medium':
+				containerElevationStyle = 'box-shadow:0 4px 6px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06);';
+				break;
+			case 'strong':
+				containerElevationStyle = 'box-shadow:0 10px 15px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05);';
+				break;
+			case 'neumorphic':
+				containerElevationStyle = 'box-shadow:8px 8px 16px rgba(0,0,0,0.1), -8px -8px 16px rgba(255,255,255,0.7);';
+				break;
+		}
+		
+		// Generate icon HTML for top positions
+		let topIconHtml = '';
+		if (layout.props.showIcon && (layout.props.iconPosition === 'top-left' || layout.props.iconPosition === 'top-right')) {
+			topIconHtml = generateIconHtml(layout, layout.props.iconPosition, colors);
+		}
+		
+		// Generate status badge
+		const statusBadgeHtml = generateStatusBadgeHtml(layout, colors, fullRows, deltaData);
+		const chromeHtml = (statusBadgeHtml || quickButtonsHtml) ? `<div class="kpi-card__chrome">${quickButtonsHtml}${statusBadgeHtml}</div>` : '';
+		
+		// Click interaction style - apply to ENTIRE CARD
+		const qlikEditMode = (qlik && qlik.navigation && typeof qlik.navigation.getMode === 'function' && qlik.navigation.getMode() !== 'analysis');
+		const clickEnabled = layout.props.enableClick && !qlikEditMode;
+		const clickStyle = clickEnabled ? 'cursor:pointer;transition:all 0.2s ease;' : '';
+		const clickClass = clickEnabled ? ' kpi-card--clickable' : '';
+		
+		// Check if card is selected (for visual feedback)
+		// Note: Async checks will be handled in paint function after render
+		const isSelected = false; // Will be updated async if needed
+		const selectedClass = '';
+		const selectedIndicatorStyle = '';
+		
+		// Apply border ONLY to the main container, remove from child sections to avoid internal borders
+		const trendSectionHtml = showTrend ? 
+			`<div class="kpi-card__trend-section" style="position:relative;${sectionBackgroundStyle}border:none;border-radius:${borderRadius}px;${trendBorderStyle}${glassEffectTrend}">${sparkHtml}${labelsHtml}</div>` : 
+			``;
+		
+		// Ensure border style is solid if border width > 0, otherwise force 0
+		const borderStyle = borderWidth > 0 ? 
+			`border: ${borderWidth}px solid ${colors.borderColor} !important;` : 
+			'border: 0 !important;';
+		
+		// Selection indicator bar (modern tapered effect)
+		const selectionBarHtml = `<div class="kpi-card__selection-bar" style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:70%;height:0;transition:all 0.3s ease;z-index:20;pointer-events:none;border-radius:999px 999px 0 0;"></div>`;
+		
+		// Store border properties in data attributes for restoration after interaction
+		return `<div class="kpi-card${darkModeClass}${isGlassTheme ? ' kpi-card--glass' : ''}${clickClass}${selectedClass}" data-border-width="${borderWidth}" data-border-color="${colors.borderColor}" style="${containerStyle}${containerBackgroundStyle}${containerElevationStyle}${clickStyle}${selectedIndicatorStyle}border-radius:${borderRadius}px;overflow:hidden;${borderStyle}">` +
+			`<div class="kpi-card__kpi-section" style="position:relative;padding:${padding}px;${sectionBackgroundStyle}border:none;border-radius:${borderRadius}px;${kpiBorderStyle}${glassEffect}">${topIconHtml}${chromeHtml}${contentWrapper}</div>` +
+			trendSectionHtml +
+			selectionBarHtml +
 			`</div>`;
 	}
 
@@ -1596,7 +2624,12 @@ define([
 	 * @param {Object} colors - Color configuration
 	 */
 	function setupSparkline($element, dataPairs, layout, measInfo, colors) {
+		const showTrend = layout.props.showTrend !== false; // Default to true if not set
+		if (!showTrend) return; // Skip sparkline setup if trend is hidden
+		
 		const $sparklineHost = $element.find(`.${CONSTANTS.SPARKLINE_INNER_CLASS}`);
+		if (!$sparklineHost.length) return; // Exit if sparkline container doesn't exist
+		
 		$sparklineHost.css('color', colors.lineColor);
 		
 		const opts = {
@@ -1643,6 +2676,8 @@ define([
 	 * @param {Array} matrix - Matrix data
 	 */
 	function setupEventHandlers($element, layout, matrix) {
+		const qlikEditMode = (qlik && qlik.navigation && typeof qlik.navigation.getMode === 'function' && qlik.navigation.getMode() !== 'analysis');
+		const clickEnabled = layout.props.enableClick && !qlikEditMode;
 		// Resize listener for responsive updates
 		$(window).off(`resize.${CONSTANTS.RESIZE_EVENT_NAMESPACE}`).on(`resize.${CONSTANTS.RESIZE_EVENT_NAMESPACE}`, () => {
 			setTimeout(() => {
@@ -1651,7 +2686,7 @@ define([
 		});
 		
 		// Quick buttons event handlers
-		if (layout.props.showQuickButtons) {
+		if (layout.props.showQuickButtons && layout.props.showTrend !== false) {
 			const elementId = $element.attr('id') || $element.data('qv-object') || 'default';
 			
 			$element.find(`.${CONSTANTS.QUICK_BTN_CLASS}`).off('click').on('click', function() {
@@ -1731,6 +2766,168 @@ define([
 				}
 			);
 		}
+		
+		// Click interaction - apply to ENTIRE CARD
+		if (clickEnabled) {
+			const clickAction = layout.props.clickAction || 'select-field-value';
+			
+			$element.find('.kpi-card').off('click.kpi-interaction').on('click.kpi-interaction', function(e) {
+				// Don't trigger if clicking on quick buttons
+				if ($(e.target).closest('.kpi-card__quick-buttons').length) {
+					return;
+				}
+				
+				// Add click animation to entire card
+				$(this).css('transform', 'scale(0.98)');
+				setTimeout(() => {
+					$(this).css('transform', 'scale(1)');
+				}, 150);
+				
+				// Trigger Qlik Sense selection based on click action
+				if (qlik && layout.qHyperCube) {
+					try {
+						const app = qlik.currApp();
+						if (app) {
+							switch (clickAction) {
+								case 'select-field-value':
+									// Select specific value in a field
+									if (layout.props.selectFieldName && layout.props.selectFieldName.trim() !== '') {
+										const fieldValue = layout.props.selectFieldValue || '';
+										const field = app.field(layout.props.selectFieldName);
+										if (field) {
+											if (fieldValue.trim() !== '') {
+												// Select the specific value
+												field.selectValues([fieldValue], true, true);
+											} else {
+												// If no value specified, select all
+												field.selectAll();
+											}
+										}
+									}
+									break;
+								case 'change-variable':
+									// Change variable value
+									if (layout.props.variableName && layout.props.variableName.trim() !== '') {
+										const varValue = layout.props.variableValue || '';
+										app.variable.setContent(layout.props.variableName, varValue);
+									}
+									break;
+								case 'clear':
+									// Clear all selections
+									app.clearAll();
+									break;
+							}
+						}
+					} catch (e) {
+						// Silently handle selection errors
+					}
+				}
+			});
+			
+			// Add hover effect to entire card
+			$element.find('.kpi-card').hover(
+				function() {
+					$(this).css('transform', 'translateY(-2px)');
+				},
+				function() {
+					$(this).css('transform', 'translateY(0)');
+				}
+			);
+			
+			// Check selection status after render (for async checks)
+			// Also set up periodic check for selection changes
+			function updateSelectionIndicator() {
+				const selectionResult = checkIfSelected(layout);
+				
+				function applySelectionEffect(selected) {
+					const $card = $element.find('.kpi-card').first();
+					const $bar = $element.find('.kpi-card__selection-bar');
+					if (!$card.length || !$card[0]) return;
+					
+					const layoutBw = parseInt($card.attr('data-border-width'), 10) || 0;
+					const layoutBc = $card.attr('data-border-color') || 'transparent';
+					
+					function restoreLayoutBorder() {
+						if (layoutBw > 0) {
+							$card[0].style.setProperty('border', `${layoutBw}px solid ${layoutBc}`, 'important');
+						} else {
+							$card[0].style.setProperty('border', '0', 'important');
+						}
+					}
+					
+					// Clear existing indicator styles
+					['border', 'border-bottom', 'border-top', 'border-left', 'border-right', 'box-shadow'].forEach(function(prop) {
+						$card[0].style.removeProperty(prop);
+					});
+					if ($bar && $bar.length) {
+						$bar.css({
+							height: '0',
+							opacity: '0',
+							boxShadow: 'none',
+							background: 'transparent'
+						});
+					}
+					
+					if (selected) {
+						$card.addClass('kpi-card--selected');
+						const indicatorType = layout.props.selectedIndicator || 'tapered-bar';
+						const selectedColor = layout.props.selectedColor || '#3b82f6';
+						
+						if (indicatorType === 'tapered-bar') {
+							if ($bar && $bar.length) {
+								$bar.css({
+									height: '6px',
+									opacity: '1',
+									background: `radial-gradient(ellipse at center, ${selectedColor} 0%, ${selectedColor} 35%, transparent 80%)`,
+									boxShadow: `0 0 12px 2px ${selectedColor}`,
+									left: '50%',
+									transform: 'translateX(-50%)',
+									width: '70%'
+								});
+							}
+							restoreLayoutBorder();
+						} else {
+							const indicatorStyle = getSelectedIndicatorStyle(layout, {});
+							const styleParts = indicatorStyle.split(';').filter(function(s) { return s.trim(); });
+							styleParts.forEach(function(stylePart) {
+								const parts = stylePart.split(':');
+								if (parts.length === 2) {
+									const prop = parts[0].trim().replace(/!important/gi, '').trim();
+									const value = parts[1].trim().replace(/!important/gi, '').trim();
+									$card[0].style.setProperty(prop, value, 'important');
+								}
+							});
+						}
+					} else {
+						$card.removeClass('kpi-card--selected');
+						restoreLayoutBorder();
+					}
+				}
+				
+				if (selectionResult && typeof selectionResult.then === 'function') {
+					selectionResult.then(applySelectionEffect).catch(function() {});
+				} else {
+					applySelectionEffect(selectionResult === true);
+				}
+			}
+			
+			// Initial check
+			updateSelectionIndicator();
+			
+			// Set up periodic check (every 500ms) to update selection indicator
+			const selectionCheckInterval = setInterval(function() {
+				if (!$element || $element.length === 0) {
+					clearInterval(selectionCheckInterval);
+					return;
+				}
+				updateSelectionIndicator();
+			}, 500);
+			
+			// Clean up interval when element is removed
+			$element.on('remove', function() {
+				clearInterval(selectionCheckInterval);
+			});
+		}
 	}
 
 	/**
@@ -1806,7 +3003,7 @@ define([
 				const duration = layout.props.valueAnimDuration || CONSTANTS.DEFAULT_VALUE_ANIMATION_DURATION;
 				
 				const formatFunction = (value) => formatNumber(value, measInfo, layout);
-				animateCounter($valueElement[0], startValue, endValue, duration, formatFunction, measInfo, layout);
+				animateCounter($valueElement[0], startValue, endValue, duration, formatFunction);
 			}, CONSTANTS.ANIMATION_TRIGGER_DELAY);
 		}
 		
@@ -1818,11 +3015,89 @@ define([
 		}
 	}
 
+	// Function to update field and variable lists
+	function updateFieldAndVariableLists() {
+		try {
+			if (qlik && qlik.currApp) {
+				const app = qlik.currApp();
+				if (app) {
+					// Get field list
+					if (app.getList) {
+						app.getList('FieldList').then(function(list) {
+							if (list && list.qFieldList && list.qFieldList.qItems) {
+								fieldListCache = list.qFieldList.qItems.map(function(item) {
+									return { value: item.qName, label: item.qName };
+								});
+								// Update properties dynamically - navigate through the structure
+								try {
+									if (properties && properties.items && properties.items.appearance && properties.items.appearance.items) {
+										const interactionSection = properties.items.appearance.items.interactionSection;
+										if (interactionSection && interactionSection.items) {
+											if (interactionSection.items.selectFieldName) {
+												// Replace function with array to ensure dropdown is populated
+												interactionSection.items.selectFieldName.options = fieldListCache.slice();
+											}
+										}
+									}
+								} catch (e) {
+									// Ignore property update errors
+								}
+							}
+						}).catch(function() {
+							// Ignore errors
+						});
+					}
+					
+					// Get variable list (try VariableList first, fall back to legacy getAll)
+					function updateVariableOptions(varItems) {
+						if (varItems && varItems.length > 0) {
+							variableListCache = varItems.map(function(v) {
+								return { value: v.qName, label: v.qName };
+							});
+							try {
+								if (properties && properties.items && properties.items.appearance && properties.items.appearance.items) {
+									const interactionSection = properties.items.appearance.items.interactionSection;
+									if (interactionSection && interactionSection.items && interactionSection.items.variableName) {
+										interactionSection.items.variableName.options = variableListCache.slice();
+									}
+								}
+							} catch (e) {
+								// Ignore property update errors
+							}
+						}
+					}
+					
+					if (app.getList) {
+						app.getList('VariableList').then(function(model) {
+							const varItems = extractVariableItems(model);
+							updateVariableOptions(varItems);
+						}).catch(function() {
+							// Ignore errors and fall back
+						});
+					} else if (app.variable && app.variable.getAll) {
+						app.variable.getAll().then(function(vars) {
+							const varItems = extractVariableItems(vars);
+							updateVariableOptions(varItems);
+						}).catch(function() {
+							// Ignore errors
+						});
+					}
+				}
+			}
+		} catch (e) {
+			// Ignore errors
+		}
+	}
+	
 	return {
-		initialProperties: { qHyperCubeDef: { qDimensions: [], qMeasures: [], qInterColumnSortOrder: [], qNoOfLeftDims: 1, qSuppressMissing: true, qInitialDataFetch: [{ qTop: 0, qLeft: 0, qWidth: 2, qHeight: 1000 }] }, props: { showLabelDates: true, align: 'left', fontMode: 'static', valueFontSize: 28, valueFontFamily: 'Open Sans', titleFontSize: 12, titleFontFamily: 'Open Sans', deltaFontSize: 16, deltaFontFamily: 'Open Sans', labelFontSize: 10, labelFontFamily: 'Open Sans', measureLabelSize: 11, measureLabelFontFamily: 'Open Sans', measureLabelPos: 'bottom', measureLabelGap: 4, valueColor: '#111111', titleColor: '#111111', labelColor: '#555555', measureLabelColor: '#666666', backgroundColor: 'transparent', borderColor: 'transparent', borderWidth: 0, borderRadius: 0, padding: 8, kpiSectionHeight: 60, trendSectionHeight: 40, sectionGap: 1, showDelta: true, deltaMode: 'points', deltaPoints: 1, deltaOffset: 1, deltaAgg: 'last', deltaDecimals: 1, deltaUpColor: '#16a34a', deltaDownColor: '#dc2626', deltaNeutralColor: '#9ca3af', deltaGap: 6, trendPosition: 'bottom', trendHeight: 0, trendTopMarginPx: 0, pulseRadius: 1.8, pulseMinColor: '#dc2626', pulseMaxColor: '#16a34a', showGlow: false, glowColor: '#ffffff', glowStdDev: 2, animateDraw: true, animDurationMs: 600, animatePulse: true, pulseAnimDelay: 300, animateArea: false, areaAnimDuration: 800, animateValue: true, valueAnimDuration: 1000, animateDelta: false, deltaAnimDuration: 600, trendMode: 'line', trendCorners: 'sharp', trendPalette: 'custom', lineColor: '#3f51b5', lineWidth: 1.5, areaColor: '#3f51b5', areaOpacity: 0.2, labelMaxWidthPct: 45, endLabelOffsetPx: 8, startLabelRightPadPx: 6, kpiAgg: 'last', kpiScope: 'full', trendWindowMode: 'lastNPoints', trendWindowPoints: 60, trendWindowDays: 180, colorPalette: 'custom', showTooltip: true, showMinMax: true, labelsGapPx: 2, areaGradient: false, areaGradientType: 'vertical', areaGradStartColor: '#3f51b5', areaGradEndColor: '#3f51b5', areaGradStartOpacity: 0.2, areaGradEndOpacity: 0, showQuickButtons: true, button1Value: 12, button1Label: '12P', button2Value: 60, button2Label: '60P', button3Value: 365, button3Label: '1Y', buttonStyle: 'rounded', buttonBackgroundColor: 'rgba(255,255,255,0.1)', buttonLabelColor: '', buttonActiveColor: '#3b82f6', buttonActiveLabelColor: '#ffffff', defaultButton: 'button2', currentSelectedButton: 'button2', valuePrefix: '', valuePrefixCustom: '', valueSuffix: '', valueSuffixCustom: '', hoverValueScale: true, hoverLineThickness: true, hoverLineThicknessMultiplier: 1.5, darkMode: false } },
+		initialProperties: { qHyperCubeDef: { qDimensions: [], qMeasures: [], qInterColumnSortOrder: [], qNoOfLeftDims: 1, qSuppressMissing: true, qInitialDataFetch: [{ qTop: 0, qLeft: 0, qWidth: 2, qHeight: 1000 }] }, props: { showLabelDates: true, align: 'left', fontMode: 'static', valueFontSize: 28, valueFontFamily: 'Open Sans', titleFontSize: 12, titleFontFamily: 'Open Sans', deltaFontSize: 16, deltaFontFamily: 'Open Sans', labelFontSize: 10, labelFontFamily: 'Open Sans', measureLabelSize: 11, measureLabelFontFamily: 'Open Sans', measureLabelPos: 'bottom', measureLabelGap: 4, theme: 'custom', valueColor: '#111111', titleColor: '#111111', labelColor: '#555555', measureLabelColor: '#666666', backgroundColor: 'transparent', borderColor: 'transparent', borderWidth: 0, borderRadius: 0, padding: 8, cardElevation: 'none', useGradient: false, gradientPreset: 'custom', gradientStart: '#3b82f6', gradientEnd: '#8b5cf6', gradientDirection: 'vertical', showIcon: false, iconPack: 'emoji', iconType: 'chart', iconSize: 24, iconCustom: '', iconPosition: 'top-right', showStatusBadge: false, enableClick: false, clickAction: 'select-field-value', selectFieldName: '', selectFieldValue: '', variableName: '', variableValue: '', selectedIndicator: 'bottom-border', selectedColor: '#3b82f6', kpiSectionHeight: 60, trendSectionHeight: 40, sectionGap: 1, useShortFormatKpi: true, useShortFormatDelta: true, kpiDecimalPlaces: 0, secondaryDecimalPlaces: 0, showDelta: true, deltaDisplayType: 'percentage', deltaMode: 'points', deltaPoints: 1, deltaOffset: 1, deltaAgg: 'last', deltaDecimals: 1, deltaUpColor: '#16a34a', deltaDownColor: '#dc2626', deltaNeutralColor: '#9ca3af', deltaGap: 6, showTrend: true, trendPosition: 'bottom', trendHeight: 0, trendTopMarginPx: 0, pulseRadius: 1.8, pulseMinColor: '#dc2626', pulseMaxColor: '#16a34a', showGlow: false, glowColor: '#ffffff', glowStdDev: 2, animateDraw: true, animDurationMs: 600, animatePulse: true, pulseAnimDelay: 300, animateArea: false, areaAnimDuration: 800, animateValue: true, valueAnimDuration: 1000, animateDelta: false, deltaAnimDuration: 600, trendMode: 'line', trendCorners: 'sharp', lineColor: '#3f51b5', lineWidth: 1.5, areaColor: '#3f51b5', areaOpacity: 0.2, labelMaxWidthPct: 45, endLabelOffsetPx: 8, startLabelRightPadPx: 6, kpiAgg: 'last', kpiScope: 'full', showSecondaryKpi: false, secondaryLabel: 'Previous Period', secondaryColor: '#94a3b8', secondaryFontSize: 16, secondaryFontFamily: 'Open Sans', trendWindowMode: 'lastNPoints', trendWindowPoints: 60, trendWindowDays: 180, showTooltip: true, showMinMax: true, labelsGapPx: 2, areaGradient: false, areaGradientType: 'vertical', areaGradStartColor: '#3f51b5', areaGradEndColor: '#3f51b5', areaGradStartOpacity: 0.2, areaGradEndOpacity: 0, showQuickButtons: true, button1Value: 12, button1Label: '12P', button2Value: 60, button2Label: '60P', button3Value: 365, button3Label: '1Y', buttonStyle: 'rounded', buttonBackgroundColor: 'rgba(255,255,255,0.1)', buttonLabelColor: '', buttonActiveColor: '#3b82f6', buttonActiveLabelColor: '#ffffff', defaultButton: 'button2', currentSelectedButton: 'button2', valuePrefix: '', valuePrefixCustom: '', valueSuffix: '', valueSuffixCustom: '', hoverValueScale: true, hoverLineThickness: true, hoverLineThicknessMultiplier: 1.5, darkMode: false, enableBackgroundCondition: false, backgroundConditionOperator: 'gt', backgroundConditionValue: 0, backgroundConditionValue2: 0, backgroundConditionColor: '#1f2937', configPresetAction: '', configPresetText: '' } },
 		definition: properties,
 		support: { snapshot: true, export: true, exportData: true },
 		paint: function ($element, layout) {
+			// Update field and variable lists on first paint
+			if (fieldListCache.length === 0 || variableListCache.length === 0) {
+				updateFieldAndVariableLists();
+			}
 			const validation = validateInputs(layout, layout.qHyperCube?.qDataPages?.[0]?.qMatrix);
 			if (!validation.isValid) {
 				$element.html(`<div class="${CONSTANTS.EMPTY_CLASS}">${validation.error}</div>`);
