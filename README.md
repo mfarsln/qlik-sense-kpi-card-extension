@@ -7,7 +7,7 @@ Modern KPI cards with dual measures, responsive typography, tapered selection ef
 ## 📸 Screenshots
 
 ### KPI Card
-![Basic KPI Card](https://imagedelivery.net/BdpL1pNKEf9FjxHkN-wXKg/48917286-4fc4-4316-821f-a6589cafd200/public).
+![Basic KPI Card](https://imagedelivery.net/BdpL1pNKEf9FjxHkN-wXKg/b83d46ec-3e6c-4a30-039d-07183a7ca600/public).
 
 ![Basic KPI Card](https://imagedelivery.net/BdpL1pNKEf9FjxHkN-wXKg/b1e3c69d-7beb-48cb-3652-8762c9110600/public)
 
@@ -199,6 +199,7 @@ You can use GitHub Issues for your questions.
 ---
 
 ⭐ If you liked this extension, don't forget to give it a star!
+
 
 
 
