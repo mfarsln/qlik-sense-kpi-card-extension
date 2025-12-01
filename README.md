@@ -1,10 +1,14 @@
+
+
 # KPI Card Extension for Qlik Sense
 
-Modern and responsive KPI card extension with sparkline trend charts for Qlik Sense visualization.
+Modern KPI cards with dual measures, responsive typography, tapered selection effects, gradient/glass themes, and portable configuration presets.
 
 ## 📸 Screenshots
 
 ### KPI Card
+![Basic KPI Card](https://imagedelivery.net/BdpL1pNKEf9FjxHkN-wXKg/48917286-4fc4-4316-821f-a6589cafd200/public).
+
 ![Basic KPI Card](https://imagedelivery.net/BdpL1pNKEf9FjxHkN-wXKg/b1e3c69d-7beb-48cb-3652-8762c9110600/public)
 
 ![Basic KPI Card](https://imagedelivery.net/BdpL1pNKEf9FjxHkN-wXKg/dae0ddf1-6570-416c-ecdf-eef885423600/public)
@@ -18,21 +22,27 @@ Modern and responsive KPI card extension with sparkline trend charts for Qlik Se
 
 ## 🚀 Features
 
-- **Single Measure KPI**: Works with one measure and one date dimension
-- **Sparkline Trend**: Embedded trend charts
+- **Single/Dual Measure KPI**: Works with one measure and one date dimension. Add secondary measure for period changes.
+- **Sparkline Trend**: Line/area, smooth or sharp, gradient fill, tooltip + min/max markers
 - **Responsive Design**: Adapts to different screen sizes
 - **Animations**: Value and trend animations
 - **Color Palettes**: Pre-built color themes and custom color options
 - **Quick Trend Buttons**: Fast trend options like 12P, 60P, 1Y
+- **Interaction Options**: Select field value, clear selection, or change variable
+- **Selection Effects**: Tapered neon bar, glow/border styles, background tint
+- **Icons**: Emoji pack, modern line icons, or sanitized custom SVG/HTML
+- **Theme Presets**: Gradient/glass schemes, custom colors, border/shadow/elevation controls
+- **Conditional Background**: Expression-enabled thresholds for background color
 - **Delta Display**: Comparison with previous periods
 - **Tooltip**: Detailed information on hover
+- **Config Presets**: Capture/apply visual/layout JSON to replicate cards
 - **Dark Mode**: Dark theme support
 
 ## 📋 Requirements
 
 - Qlik Sense Enterprise, Qlik Cloud
 - 1 Date Dimension
-- 1 Measure
+- 1 or 2 Measure
 
 ## 🔧 Installation
 
@@ -189,6 +199,7 @@ You can use GitHub Issues for your questions.
 ---
 
 ⭐ If you liked this extension, don't forget to give it a star!
+
 
 
 
