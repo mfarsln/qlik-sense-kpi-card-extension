@@ -1,14 +1,59 @@
-/* KPI Card Extension Styles - Optimized */
+/* KPI Card Extension Styles - Modern & Eye-catching */
 
 /* Base card styles */
 .kpi-card {
 	width: 100%;
 	height: 100%;
 	color: inherit;
-	/* Allow border to be set by inline styles */
 	border-style: solid !important;
 	outline: none !important;
 	box-sizing: border-box;
+	position: relative;
+	overflow: hidden;
+}
+
+/* Subtle shine effect overlay */
+.kpi-card::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: -100%;
+	width: 50%;
+	height: 100%;
+	background: linear-gradient(
+		90deg,
+		transparent,
+		rgba(255, 255, 255, 0.03),
+		transparent
+	);
+	transition: left 0.8s ease;
+	pointer-events: none;
+	z-index: 100;
+}
+
+.kpi-card:hover::before {
+	left: 150%;
+}
+
+/* Ambient glow on hover */
+.kpi-card::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	opacity: 0;
+	transition: opacity 0.4s ease;
+	pointer-events: none;
+	z-index: 0;
+	background: radial-gradient(
+		ellipse at 50% 0%,
+		rgba(255, 255, 255, 0.08) 0%,
+		transparent 70%
+	);
+}
+
+.kpi-card:hover::after {
+	opacity: 1;
 }
 
 /* Override Qlik theme borders - consolidated selectors */
@@ -32,12 +77,49 @@
 	background: transparent !important;
 }
 
-/* Card sections */
+/* ========== UNIFIED SINGLE SECTION LAYOUT ========== */
+
+/* Trend layer - positioned at bottom, behind KPI content */
+.kpi-card__trend-layer {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	z-index: 1;
+	overflow: visible;
+	pointer-events: none;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
+	transition: opacity 0.4s ease;
+	background: transparent !important;
+}
+
+/* Trend layer has no background - card background shows through */
+
+/* KPI layer - positioned on top of trend */
+.kpi-card__kpi-layer {
+	position: relative;
+	z-index: 2;
+	display: flex;
+	flex-direction: column;
+	box-sizing: border-box;
+	transition: transform 0.3s ease;
+}
+
+.kpi-card:hover .kpi-card__kpi-layer {
+	transform: translateY(-1px);
+}
+
+/* Legacy support for old section classes */
 .kpi-card__kpi-section {
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
 	position: relative;
+	overflow: hidden;
+	box-sizing: border-box;
+	min-height: 0;
 }
 
 .kpi-card__trend-section {
@@ -45,55 +127,118 @@
 	flex-direction: column;
 	justify-content: flex-end;
 	position: relative;
+	overflow: hidden;
+	box-sizing: border-box;
+	min-height: 0;
 }
 
 /* Title styles */
 .kpi-card__title {
-	opacity: 0.8;
+	opacity: 0.85;
+	letter-spacing: 0.02em;
+	transition: opacity 0.3s ease, letter-spacing 0.3s ease;
+}
+
+.kpi-card:hover .kpi-card__title {
+	opacity: 1;
+	letter-spacing: 0.03em;
 }
 
 /* Value styles */
 .kpi-card__value {
-	font-weight: 600;
-	line-height: 1.2;
+	font-weight: 700;
+	line-height: 1.1;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
-	transition: transform 0.3s ease, opacity 0.3s ease;
+	transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 	font-size: inherit;
+	position: relative;
 }
 
 .kpi-card__value:hover {
-	transform: scale(1.05);
+	transform: scale(1.03);
 }
 
 /* Sparkline styles */
 .kpi-card__sparkline {
-	height: 100%;
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
 	width: 100%;
-	min-height: 120px;
+	height: 100%;
+	min-height: 0;
+	box-sizing: border-box;
+	overflow: hidden;
+	background: transparent !important;
 }
 
 .kpi-card__sparkline-inner {
 	width: 100%;
 	height: 100%;
+	min-height: 0;
 	color: currentColor;
+	background: transparent !important;
+}
+
+.kpi-card__sparkline-inner svg {
+	background: transparent !important;
+}
+
+/* Trend layer sparkline container */
+.kpi-card__trend-layer .kpi-card__sparkline {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	pointer-events: auto; /* Enable tooltip interaction while trend layer has pointer-events:none */
 }
 
 .kpi-card__sparkline-inner svg path {
-	transition: stroke-width 0.2s ease;
+	transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+	filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
 
-.kpi-card__sparkline:hover .kpi-card__sparkline-inner svg path {
-	transition: stroke-width 0.2s ease;
+.kpi-card:hover .kpi-card__sparkline-inner svg path {
+	filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3)) drop-shadow(0 0 12px currentColor);
+}
+
+/* Trend line glow animation */
+.kpi-card__sparkline-inner svg path[stroke] {
+	animation: trendGlow 3s ease-in-out infinite;
+}
+
+@keyframes trendGlow {
+	0%, 100% {
+		filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+	}
+	50% {
+		filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3)) drop-shadow(0 0 6px currentColor);
+	}
 }
 
 /* Labels */
 .kpi-card__labels {
 	display: flex;
 	justify-content: space-between;
-	opacity: 0.8;
+	opacity: 0.9;
 	font-size: inherit;
+	transition: opacity 0.3s ease;
+}
+
+.kpi-card__label {
+	backdrop-filter: blur(4px);
+	-webkit-backdrop-filter: blur(4px);
+	transition: all 0.3s ease;
+}
+
+.kpi-card:hover .kpi-card__labels {
+	opacity: 1;
+}
+
+.kpi-card:hover .kpi-card__label {
+	transform: translateY(-1px);
 }
 
 /* Empty state */
@@ -106,6 +251,45 @@
 	font-size: calc(0.8vw + 0.5vh + 8px);
 	padding: calc(0.5vw + 0.5vh + 4px);
 	text-align: center;
+}
+
+/* Selection indicator bar - modern elegant style, always at very bottom of card */
+.kpi-card__selection-bar {
+	position: absolute !important;
+	bottom: 0 !important;
+	left: 0;
+	right: 0;
+	height: 0;
+	opacity: 0;
+	pointer-events: none;
+	z-index: 100 !important;
+	transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.kpi-card__selection-bar::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 10%;
+	right: 10%;
+	height: 100%;
+	border-radius: 4px 4px 0 0;
+	background: inherit;
+	filter: blur(8px);
+	opacity: 0.6;
+}
+
+.kpi-card__selection-bar.active {
+	animation: selectionBarGlow 2s ease-in-out infinite;
+}
+
+@keyframes selectionBarGlow {
+	0%, 100% {
+		filter: brightness(1);
+	}
+	50% {
+		filter: brightness(1.3);
+	}
 }
 
 /* Pulse animation for min/max markers */
@@ -132,25 +316,63 @@
 	100% { transform: scale(1); opacity: 1; }
 }
 
+/* Card entrance animation */
+@keyframes cardEntrance {
+	0% {
+		opacity: 0;
+		transform: translateY(20px) scale(0.95);
+	}
+	100% {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+
+.kpi-card {
+	animation: cardEntrance 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
 /* Counter animation */
 @keyframes counterAppear {
-	0% { 
-		opacity: 0; 
-		transform: scale(0.8) translateY(10px); 
+	0% {
+		opacity: 0;
+		transform: scale(0.8) translateY(10px);
 	}
-	100% { 
-		opacity: 1; 
-		transform: scale(1) translateY(0); 
+	60% {
+		transform: scale(1.02) translateY(-2px);
+	}
+	100% {
+		opacity: 1;
+		transform: scale(1) translateY(0);
 	}
 }
 
 .kpi-card__value--animating {
-	animation: counterAppear 0.6s ease-out forwards;
+	animation: counterAppear 0.7s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 /* Delta animation */
 .kpi-card__delta {
-	transition: opacity 0.6s ease, transform 0.6s ease;
+	transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+	font-weight: 600;
+	letter-spacing: 0.01em;
+}
+
+.kpi-card__delta:hover {
+	transform: scale(1.08);
+}
+
+/* Delta color glow based on positive/negative */
+.kpi-card__delta[style*="color: #22c55e"],
+.kpi-card__delta[style*="color:#22c55e"],
+.kpi-card__delta[style*="color: rgb(34, 197, 94)"] {
+	text-shadow: 0 0 12px rgba(34, 197, 94, 0.5);
+}
+
+.kpi-card__delta[style*="color: #ef4444"],
+.kpi-card__delta[style*="color:#ef4444"],
+.kpi-card__delta[style*="color: rgb(239, 68, 68)"] {
+	text-shadow: 0 0 12px rgba(239, 68, 68, 0.5);
 }
 
 .kpi-card__delta--animating {
@@ -170,29 +392,34 @@
 
 /* Quick buttons */
 .kpi-card__quick-buttons {
-	opacity: 0.8;
-	transition: opacity 0.2s ease;
+	opacity: 0.85;
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 	display: flex;
 	gap: 4px;
 }
 
 .kpi-card__quick-buttons:hover {
 	opacity: 1;
+	transform: scale(1.02);
 }
 
 .kpi-card__quick-btn {
-	transition: all 0.2s ease;
+	transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+	backdrop-filter: blur(4px);
+	-webkit-backdrop-filter: blur(4px);
 }
 
 .kpi-card__quick-btn:hover {
-	background: rgba(255,255,255,0.2) !important;
-	transform: translateY(-1px);
+	background: rgba(255,255,255,0.25) !important;
+	transform: translateY(-2px) scale(1.05);
+	box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 .kpi-card__quick-btn.active {
-	background: var(--active-color, rgba(255,255,255,0.3)) !important;
-	box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+	background: var(--active-color, rgba(255,255,255,0.35)) !important;
+	box-shadow: 0 4px 12px rgba(0,0,0,0.2), 0 0 20px var(--active-color, rgba(255,255,255,0.2));
 	color: var(--active-label-color, #ffffff) !important;
+	transform: translateY(-1px);
 }
 
 /* Button style variants */
@@ -210,29 +437,181 @@
 	color: #ffffff !important;
 }
 
-/* Glass morphism theme styles */
+/* Glass morphism theme styles - Modern frosted glass effect */
 .kpi-card--glass {
-	background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%) !important;
+	background: linear-gradient(
+		135deg,
+		rgba(255, 255, 255, 0.1) 0%,
+		rgba(255, 255, 255, 0.05) 100%
+	) !important;
+	backdrop-filter: blur(20px) saturate(180%);
+	-webkit-backdrop-filter: blur(20px) saturate(180%);
+	border: 1px solid rgba(255, 255, 255, 0.18) !important;
+	box-shadow:
+		0 8px 32px rgba(0, 0, 0, 0.1),
+		inset 0 1px 0 rgba(255, 255, 255, 0.2),
+		inset 0 -1px 0 rgba(0, 0, 0, 0.05) !important;
 }
 
-.kpi-card--glass .kpi-card__kpi-section,
-.kpi-card--glass .kpi-card__trend-section {
-	backdrop-filter: blur(10px);
-	-webkit-backdrop-filter: blur(10px);
+.kpi-card--glass::before {
+	background: linear-gradient(
+		90deg,
+		transparent,
+		rgba(255, 255, 255, 0.1),
+		transparent
+	) !important;
+}
+
+.kpi-card--glass::after {
+	background: radial-gradient(
+		ellipse at 50% 0%,
+		rgba(255, 255, 255, 0.15) 0%,
+		transparent 60%
+	) !important;
+}
+
+.kpi-card--glass:hover {
+	box-shadow:
+		0 12px 40px rgba(0, 0, 0, 0.15),
+		inset 0 1px 0 rgba(255, 255, 255, 0.25),
+		inset 0 -1px 0 rgba(0, 0, 0, 0.05) !important;
+}
+
+.kpi-card--glass .kpi-card__kpi-layer {
+	background: transparent;
+}
+
+.kpi-card--glass .kpi-card__value {
+	text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.kpi-card--glass .kpi-card__title {
+	text-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+}
+
+.kpi-card--glass .kpi-card__sparkline-inner svg path[stroke] {
+	filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.5));
+}
+
+.kpi-card--glass .kpi-card__quick-btn {
+	background: rgba(255, 255, 255, 0.1) !important;
+	border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+.kpi-card--glass .kpi-card__quick-btn:hover {
+	background: rgba(255, 255, 255, 0.2) !important;
+}
+
+.kpi-card--glass .kpi-card__quick-btn.active {
+	background: rgba(255, 255, 255, 0.25) !important;
+	box-shadow: 0 0 20px rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Forecast Line styles */
+.kpi-card__forecast-line {
+	animation: forecastPulse 2s ease-in-out infinite;
+}
+
+@keyframes forecastPulse {
+	0%, 100% {
+		opacity: 0.7;
+	}
+	50% {
+		opacity: 1;
+	}
+}
+
+.kpi-card__forecast-marker {
+	animation: forecastMarkerPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes forecastMarkerPulse {
+	0%, 100% {
+		transform: scale(1);
+		filter: drop-shadow(0 0 2px currentColor);
+	}
+	50% {
+		transform: scale(1.2);
+		filter: drop-shadow(0 0 6px currentColor);
+	}
+}
+
+.kpi-card__confidence-interval {
+	transition: opacity 0.3s ease;
+}
+
+.kpi-card:hover .kpi-card__confidence-interval {
+	fill-opacity: 0.25 !important;
+}
+
+.kpi-card:hover .kpi-card__forecast-line {
+	stroke-opacity: 1 !important;
+}
+
+/* Forecast separator line */
+.kpi-card__forecast-separator {
+	stroke-dasharray: 4, 4;
+	animation: forecastSeparatorPulse 3s ease-in-out infinite;
+}
+
+@keyframes forecastSeparatorPulse {
+	0%, 100% {
+		stroke-opacity: 0.2;
+	}
+	50% {
+		stroke-opacity: 0.4;
+	}
+}
+
+/* Bar Chart min/max highlighting */
+.kpi-card__sparkline-inner svg rect[fill="#22c55e"] {
+	filter: drop-shadow(0 0 4px rgba(34, 197, 94, 0.5));
+}
+
+.kpi-card__sparkline-inner svg rect[fill="#ef4444"] {
+	filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.5));
+}
+
+/* Secondary KPI styles */
+.kpi-card__secondary {
+	transition: all 0.3s ease;
+	opacity: 0.85;
+}
+
+.kpi-card:hover .kpi-card__secondary {
+	opacity: 1;
+	transform: translateX(2px);
+}
+
+/* Measure label styles */
+.kpi-card__measure-label {
+	transition: all 0.3s ease;
+	opacity: 0.75;
+	letter-spacing: 0.03em;
+	text-transform: uppercase;
+}
+
+.kpi-card:hover .kpi-card__measure-label {
+	opacity: 0.9;
 }
 
 /* Clickable card styles - apply to entire card */
 .kpi-card--clickable {
-	transition: transform 0.2s ease, box-shadow 0.2s ease;
+	transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+	cursor: pointer;
 }
 
 .kpi-card--clickable:hover {
-	transform: translateY(-2px);
-	box-shadow: 0 12px 20px rgba(0,0,0,0.15) !important;
+	transform: translateY(-4px) scale(1.01);
+	box-shadow:
+		0 20px 40px rgba(0,0,0,0.15),
+		0 8px 16px rgba(0,0,0,0.1),
+		0 0 0 1px rgba(255,255,255,0.1) inset !important;
 }
 
 .kpi-card--clickable:active {
-	transform: translateY(0);
+	transform: translateY(-1px) scale(0.99);
+	transition-duration: 0.1s;
 }
 
 /* Selected card indicator styles */
