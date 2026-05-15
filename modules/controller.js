@@ -14,6 +14,8 @@ function (qlik, $, constantsModule, themesModule, formatters, chart, renderer, p
 	// Formatters
 	var getSelectedButton     = formatters.getSelectedButton;
 	var saveSelectedButton    = formatters.saveSelectedButton;
+	var getSelectedScopeButton = formatters.getSelectedScopeButton;
+	var saveSelectedScopeButton = formatters.saveSelectedScopeButton;
 	var formatDate            = formatters.formatDate;
 	var hexToRgba             = formatters.hexToRgba;
 	var formatWithCustomSettings = formatters.formatWithCustomSettings;
@@ -42,6 +44,8 @@ function (qlik, $, constantsModule, themesModule, formatters, chart, renderer, p
 	var generateLabelsHtml        = renderer.generateLabelsHtml;
 	var generateSparklineHtml     = renderer.generateSparklineHtml;
 	var generateQuickButtonsHtml  = renderer.generateQuickButtonsHtml;
+	var generateScopeButtonsHtml  = renderer.generateScopeButtonsHtml;
+	var generateSelectionChipHtml = renderer.generateSelectionChipHtml;
 	var buildFinalHtml            = renderer.buildFinalHtml;
 
 	// ── Controller Code ───────────────────────────────────────────────────────
@@ -173,9 +177,9 @@ function (qlik, $, constantsModule, themesModule, formatters, chart, renderer, p
 		
 		const currVals = collect(startCurr, endIdx);
 		const prevVals = collect(prevStart, prevEnd);
-		
+
 		if (!currVals.length || !prevVals.length) return null;
-		
+
 		// Helper function to aggregate values
 		function aggVals(list) {
 			if (agg === 'sum') {
@@ -186,11 +190,413 @@ function (qlik, $, constantsModule, themesModule, formatters, chart, renderer, p
 			}
 			return list[list.length - 1]; // 'last'
 		}
-		
+
+		function rangeFor(s, e) {
+			if (s < 0 || e < 0 || !rows[s] || !rows[e]) return null;
+			return { startText: rows[s].dateText, endText: rows[e].dateText, startNum: rows[s].dateNum, endNum: rows[e].dateNum };
+		}
+
 		return {
 			curr: aggVals(currVals),
-			prev: aggVals(prevVals)
+			prev: aggVals(prevVals),
+			currentRange: rangeFor(startCurr, endIdx),
+			previousRange: rangeFor(prevStart, prevEnd)
 		};
+	}
+
+	// Qlik date number ↔ JS Date helpers (Qlik epoch: 1899-12-30)
+	function qlikDateNumToDate(dateNum) {
+		return new Date(Date.UTC(1899, 11, 30) + dateNum * 86400000);
+	}
+	function dateToQlikDateNum(date) {
+		return (date.getTime() - Date.UTC(1899, 11, 30)) / 86400000;
+	}
+
+	/**
+	 * Computes delta against a calendar-aligned previous period.
+	 * @param {Array} rows - Sorted full rows
+	 * @param {string} unit - 'day' | 'week' | 'month' | 'quarter' | 'year'
+	 * @returns {Object|null} { curr, prev } or null
+	 */
+	function computeDeltaFromCalendar(rows, unit) {
+		if (!rows || !rows.length) return null;
+		const lastRow = rows[rows.length - 1];
+		const lastDateNum = lastRow.dateNum;
+		if (!isFinite(lastDateNum)) return null;
+		const currVal = lastRow.valNum;
+		if (currVal === null || currVal === undefined || isNaN(currVal)) return null;
+
+		let targetDateNum;
+		if (unit === 'day') {
+			targetDateNum = lastDateNum - 1;
+		} else if (unit === 'week') {
+			targetDateNum = lastDateNum - 7;
+		} else {
+			const lastDate = qlikDateNumToDate(lastDateNum);
+			const targetDate = new Date(Date.UTC(lastDate.getUTCFullYear(), lastDate.getUTCMonth(), lastDate.getUTCDate()));
+			if (unit === 'month') {
+				targetDate.setUTCMonth(targetDate.getUTCMonth() - 1);
+			} else if (unit === 'quarter') {
+				targetDate.setUTCMonth(targetDate.getUTCMonth() - 3);
+			} else if (unit === 'year') {
+				targetDate.setUTCFullYear(targetDate.getUTCFullYear() - 1);
+			} else {
+				return null;
+			}
+			targetDateNum = dateToQlikDateNum(targetDate);
+		}
+
+		// Find row whose date is closest to target (prefer the latest row at-or-before target).
+		let bestRow = null;
+		let bestDiff = Infinity;
+		for (let i = 0; i < rows.length - 1; i++) {
+			const dn = rows[i].dateNum;
+			if (!isFinite(dn)) continue;
+			const v = rows[i].valNum;
+			if (v === null || v === undefined || isNaN(v)) continue;
+			const diff = Math.abs(dn - targetDateNum);
+			if (diff < bestDiff) {
+				bestDiff = diff;
+				bestRow = rows[i];
+			}
+		}
+		if (!bestRow) return null;
+		return {
+			curr: currVal,
+			prev: bestRow.valNum,
+			currentRange: { startText: lastRow.dateText, endText: lastRow.dateText, startNum: lastDateNum, endNum: lastDateNum },
+			previousRange: { startText: bestRow.dateText, endText: bestRow.dateText, startNum: bestRow.dateNum, endNum: bestRow.dateNum }
+		};
+	}
+
+	/**
+	 * Filters rows based on a predefined KPI scope (MTD/YTD/...).
+	 * Returns null if scope unrecognized.
+	 */
+	function filterRowsByScope(rows, scope) {
+		if (!rows || !rows.length) return rows;
+		const lastRow = rows[rows.length - 1];
+		const lastDateNum = lastRow.dateNum;
+		if (!isFinite(lastDateNum)) return rows;
+
+		const lastDate = qlikDateNumToDate(lastDateNum);
+		let startDateNum;
+
+		if (scope === 'today') {
+			startDateNum = lastDateNum;
+		} else if (scope === 'wtd') {
+			// Week start = Monday (ISO). Sunday is day 0 → treat as 7.
+			const day = lastDate.getUTCDay() || 7;
+			startDateNum = lastDateNum - (day - 1);
+		} else if (scope === 'mtd') {
+			startDateNum = dateToQlikDateNum(new Date(Date.UTC(lastDate.getUTCFullYear(), lastDate.getUTCMonth(), 1)));
+		} else if (scope === 'qtd') {
+			const quarter = Math.floor(lastDate.getUTCMonth() / 3);
+			startDateNum = dateToQlikDateNum(new Date(Date.UTC(lastDate.getUTCFullYear(), quarter * 3, 1)));
+		} else if (scope === 'ytd') {
+			startDateNum = dateToQlikDateNum(new Date(Date.UTC(lastDate.getUTCFullYear(), 0, 1)));
+		} else if (scope === 'last7d') {
+			startDateNum = lastDateNum - 6;
+		} else if (scope === 'last30d') {
+			startDateNum = lastDateNum - 29;
+		} else if (scope === 'last90d') {
+			startDateNum = lastDateNum - 89;
+		} else {
+			return rows;
+		}
+
+		const filtered = rows.filter(r => isFinite(r.dateNum) && r.dateNum >= startDateNum);
+		return filtered.length ? filtered : rows;
+	}
+
+	/**
+	 * Computes delta against the scope-aligned previous period.
+	 * MTD → previous month same day-range; YTD → previous year same day-range; etc.
+	 * Aggregation matches the KPI aggregation (so MTD+Sum compares to Previous-MTD Sum).
+	 */
+	function computeDeltaFromScope(fullRows, scope, kpiAgg) {
+		// "Today" is a single point; reuse the calendar-day delta which finds the closest prior data point.
+		if (scope === 'today') {
+			return computeDeltaFromCalendar(fullRows, 'day');
+		}
+
+		const currentRows = filterRowsByScope(fullRows, scope);
+		if (!currentRows || !currentRows.length) return null;
+
+		const lastRow = currentRows[currentRows.length - 1];
+		const firstRow = currentRows[0];
+		if (!isFinite(lastRow.dateNum) || !isFinite(firstRow.dateNum)) return null;
+
+		let prevStart, prevEnd;
+
+		if (scope === 'wtd') {
+			prevStart = firstRow.dateNum - 7;
+			prevEnd = lastRow.dateNum - 7;
+		} else if (scope === 'mtd') {
+			const lastDate = qlikDateNumToDate(lastRow.dateNum);
+			prevStart = dateToQlikDateNum(new Date(Date.UTC(lastDate.getUTCFullYear(), lastDate.getUTCMonth() - 1, 1)));
+			prevEnd = dateToQlikDateNum(new Date(Date.UTC(lastDate.getUTCFullYear(), lastDate.getUTCMonth() - 1, lastDate.getUTCDate())));
+		} else if (scope === 'qtd') {
+			const lastDate = qlikDateNumToDate(lastRow.dateNum);
+			const firstDate = qlikDateNumToDate(firstRow.dateNum);
+			prevStart = dateToQlikDateNum(new Date(Date.UTC(firstDate.getUTCFullYear(), firstDate.getUTCMonth() - 3, firstDate.getUTCDate())));
+			prevEnd = dateToQlikDateNum(new Date(Date.UTC(lastDate.getUTCFullYear(), lastDate.getUTCMonth() - 3, lastDate.getUTCDate())));
+		} else if (scope === 'ytd') {
+			const lastDate = qlikDateNumToDate(lastRow.dateNum);
+			prevStart = dateToQlikDateNum(new Date(Date.UTC(lastDate.getUTCFullYear() - 1, 0, 1)));
+			prevEnd = dateToQlikDateNum(new Date(Date.UTC(lastDate.getUTCFullYear() - 1, lastDate.getUTCMonth(), lastDate.getUTCDate())));
+		} else if (scope === 'last7d') {
+			prevEnd = lastRow.dateNum - 7;
+			prevStart = prevEnd - 6;
+		} else if (scope === 'last30d') {
+			prevEnd = lastRow.dateNum - 30;
+			prevStart = prevEnd - 29;
+		} else if (scope === 'last90d') {
+			prevEnd = lastRow.dateNum - 90;
+			prevStart = prevEnd - 89;
+		} else {
+			return null;
+		}
+
+		const previousRows = fullRows.filter(r => isFinite(r.dateNum) && r.dateNum >= prevStart && r.dateNum <= prevEnd);
+		if (!previousRows.length) return null;
+
+		const currentPairs = currentRows.map(r => [r.dateText, r.valNum]);
+		const previousPairs = previousRows.map(r => [r.dateText, r.valNum]);
+		const curr = computeAggregate(currentPairs, kpiAgg);
+		const prev = computeAggregate(previousPairs, kpiAgg);
+		if (curr === null || curr === undefined || prev === null || prev === undefined) return null;
+		return {
+			curr: curr,
+			prev: prev,
+			currentRange: { startText: firstRow.dateText, endText: lastRow.dateText, startNum: firstRow.dateNum, endNum: lastRow.dateNum },
+			previousRange: { startText: previousRows[0].dateText, endText: previousRows[previousRows.length - 1].dateText, startNum: previousRows[0].dateNum, endNum: previousRows[previousRows.length - 1].dateNum }
+		};
+	}
+
+	const PREDEFINED_SCOPES = ['today', 'wtd', 'mtd', 'qtd', 'ytd', 'last7d', 'last30d', 'last90d'];
+
+	/**
+	 * Resolves the date dimension's underlying field name (used to read selection state).
+	 * Allows spaces and hyphens; only rejects obvious expressions (start with '=' or contain '(').
+	 */
+	function getDateFieldName(layout) {
+		try {
+			const dim = layout && layout.qHyperCube && layout.qHyperCube.qDimensionInfo && layout.qHyperCube.qDimensionInfo[0];
+			if (!dim) return null;
+			function cleanName(s) {
+				if (typeof s !== 'string') return null;
+				const trimmed = s.trim();
+				if (!trimmed) return null;
+				// Reject obvious expressions: leading '=' or any parenthesis.
+				if (trimmed.charAt(0) === '=' || /\(/.test(trimmed)) return null;
+				// Strip surrounding [brackets] if present — selectionState uses bare names.
+				return trimmed.replace(/^\[(.+)\]$/, '$1');
+			}
+			if (dim.qGroupFieldDefs && dim.qGroupFieldDefs.length) {
+				const fd = cleanName(dim.qGroupFieldDefs[0]);
+				if (fd) return fd;
+			}
+			return cleanName(dim.qFallbackTitle);
+		} catch (e) { return null; }
+	}
+
+	/**
+	 * Selection state is read straight from the hypercube matrix — each cell's `qState` tells us
+	 * whether the user selected that value. No async, no API call, no version dependencies.
+	 *   'S'  → user-selected
+	 *   'XS' → selected but excluded by another field's selection (still user-intended)
+	 */
+	function isSelectedRow(row) {
+		return row && (row.dateState === 'S' || row.dateState === 'XS');
+	}
+
+	/**
+	 * Returns the chip-ready info for the current selection by scanning fullRows for qState='S'.
+	 * Returns null when nothing is user-selected on the dimension.
+	 */
+	function getSyncSelectionInfoFromRows(fullRows) {
+		if (!fullRows || !fullRows.length) return null;
+		const selected = fullRows.filter(isSelectedRow);
+		if (!selected.length) return null;
+		// fullRows is already sorted by dateNum (see processMatrixData), so `selected` is too.
+		const first = selected[0];
+		const last = selected[selected.length - 1];
+		const label = (first.dateText === last.dateText)
+			? first.dateText
+			: (first.dateText + ' – ' + last.dateText);
+		return { label: label, rows: selected, count: selected.length };
+	}
+
+	/**
+	 * Delta for the 'selection' scope: current = the user-selected rows, previous = the N rows
+	 * immediately preceding the first selected row in fullRows order. Granularity-agnostic.
+	 */
+	function computeDeltaFromSelectedRows(fullRows, selectedRows, kpiAgg) {
+		if (!selectedRows || !selectedRows.length) return null;
+		const firstSelText = String(selectedRows[0].dateText);
+		let firstIdx = -1;
+		for (let i = 0; i < fullRows.length; i++) {
+			if (String(fullRows[i].dateText) === firstSelText) { firstIdx = i; break; }
+		}
+		if (firstIdx <= 0) return null;
+
+		const N = selectedRows.length;
+		const prevStart = Math.max(0, firstIdx - N);
+		const prevEnd = firstIdx - 1;
+		const previousRows = fullRows.slice(prevStart, prevEnd + 1);
+		if (!previousRows.length) return null;
+
+		const currentPairs = selectedRows.map(function(r){ return [r.dateText, r.valNum]; });
+		const previousPairs = previousRows.map(function(r){ return [r.dateText, r.valNum]; });
+		const curr = computeAggregate(currentPairs, kpiAgg);
+		const prev = computeAggregate(previousPairs, kpiAgg);
+		if (curr === null || curr === undefined || prev === null || prev === undefined) return null;
+		return {
+			curr: curr, prev: prev,
+			currentRange: { startText: selectedRows[0].dateText, endText: selectedRows[selectedRows.length - 1].dateText, startNum: selectedRows[0].dateNum, endNum: selectedRows[selectedRows.length - 1].dateNum },
+			previousRange: { startText: previousRows[0].dateText, endText: previousRows[previousRows.length - 1].dateText, startNum: previousRows[0].dateNum, endNum: previousRows[previousRows.length - 1].dateNum }
+		};
+	}
+
+	/**
+	 * Returns the trend rows when "Link Trend to Scope" is enabled — covers BOTH the current
+	 * scope period and the matching previous period so scope highlight bands have something
+	 * to anchor on (current on the right, previous on the left).
+	 */
+	function getLinkedTrendRows(fullRows, scope) {
+		if (!fullRows || !fullRows.length) return fullRows;
+		const lastRow = fullRows[fullRows.length - 1];
+		const lastDateNum = lastRow.dateNum;
+		if (!isFinite(lastDateNum)) return fullRows;
+
+		const lastDate = qlikDateNumToDate(lastDateNum);
+		let windowStart;
+
+		if (scope === 'today') {
+			windowStart = lastDateNum - 1;
+		} else if (scope === 'wtd') {
+			windowStart = lastDateNum - 13;
+		} else if (scope === 'mtd') {
+			windowStart = dateToQlikDateNum(new Date(Date.UTC(lastDate.getUTCFullYear(), lastDate.getUTCMonth() - 1, 1)));
+		} else if (scope === 'qtd') {
+			const quarter = Math.floor(lastDate.getUTCMonth() / 3);
+			windowStart = dateToQlikDateNum(new Date(Date.UTC(lastDate.getUTCFullYear(), (quarter - 1) * 3, 1)));
+		} else if (scope === 'ytd') {
+			windowStart = dateToQlikDateNum(new Date(Date.UTC(lastDate.getUTCFullYear() - 1, 0, 1)));
+		} else if (scope === 'last7d') {
+			windowStart = lastDateNum - 13;
+		} else if (scope === 'last30d') {
+			windowStart = lastDateNum - 59;
+		} else if (scope === 'last90d') {
+			windowStart = lastDateNum - 179;
+		} else {
+			return fullRows;
+		}
+
+		const filtered = fullRows.filter(function(r){ return isFinite(r.dateNum) && r.dateNum >= windowStart; });
+		return filtered.length ? filtered : fullRows;
+	}
+
+	/**
+	 * Maps the current scope's date range (and the matching previous period) into
+	 * window-relative indices so the sparkline can shade the two periods.
+	 * Returns null if scope is not predefined or windowRows is empty.
+	 */
+	function computeScopeHighlightBands(fullRows, windowRows, scope) {
+		if (!windowRows || !windowRows.length) return null;
+		if (PREDEFINED_SCOPES.indexOf(scope) === -1) return null;
+
+		const currentRows = filterRowsByScope(fullRows, scope);
+		if (!currentRows || !currentRows.length) return null;
+
+		// Compute previous period bounds. For "today" we mirror calendar('day').
+		let prevStart, prevEnd;
+		const lastRow = currentRows[currentRows.length - 1];
+		const firstRow = currentRows[0];
+		if (!isFinite(lastRow.dateNum) || !isFinite(firstRow.dateNum)) return null;
+
+		if (scope === 'today') {
+			prevStart = prevEnd = lastRow.dateNum - 1;
+		} else if (scope === 'wtd') {
+			prevStart = firstRow.dateNum - 7;
+			prevEnd = lastRow.dateNum - 7;
+		} else if (scope === 'mtd') {
+			const ld = qlikDateNumToDate(lastRow.dateNum);
+			prevStart = dateToQlikDateNum(new Date(Date.UTC(ld.getUTCFullYear(), ld.getUTCMonth() - 1, 1)));
+			prevEnd = dateToQlikDateNum(new Date(Date.UTC(ld.getUTCFullYear(), ld.getUTCMonth() - 1, ld.getUTCDate())));
+		} else if (scope === 'qtd') {
+			const ld = qlikDateNumToDate(lastRow.dateNum);
+			const fd = qlikDateNumToDate(firstRow.dateNum);
+			prevStart = dateToQlikDateNum(new Date(Date.UTC(fd.getUTCFullYear(), fd.getUTCMonth() - 3, fd.getUTCDate())));
+			prevEnd = dateToQlikDateNum(new Date(Date.UTC(ld.getUTCFullYear(), ld.getUTCMonth() - 3, ld.getUTCDate())));
+		} else if (scope === 'ytd') {
+			const ld = qlikDateNumToDate(lastRow.dateNum);
+			prevStart = dateToQlikDateNum(new Date(Date.UTC(ld.getUTCFullYear() - 1, 0, 1)));
+			prevEnd = dateToQlikDateNum(new Date(Date.UTC(ld.getUTCFullYear() - 1, ld.getUTCMonth(), ld.getUTCDate())));
+		} else if (scope === 'last7d') {
+			prevEnd = lastRow.dateNum - 7;
+			prevStart = prevEnd - 6;
+		} else if (scope === 'last30d') {
+			prevEnd = lastRow.dateNum - 30;
+			prevStart = prevEnd - 29;
+		} else if (scope === 'last90d') {
+			prevEnd = lastRow.dateNum - 90;
+			prevStart = prevEnd - 89;
+		} else {
+			return null;
+		}
+
+		// Find first/last windowRows index whose dateNum lies inside [start, end].
+		function findIdxRange(start, end) {
+			let s = -1, e = -1;
+			for (let i = 0; i < windowRows.length; i++) {
+				const dn = windowRows[i].dateNum;
+				if (!isFinite(dn)) continue;
+				if (dn >= start && dn <= end) {
+					if (s === -1) s = i;
+					e = i;
+				}
+			}
+			return s !== -1 ? { startIdx: s, endIdx: e } : null;
+		}
+
+		const currentBand = findIdxRange(firstRow.dateNum, lastRow.dateNum);
+		const previousBand = findIdxRange(prevStart, prevEnd);
+		if (!currentBand && !previousBand) return null;
+		return { current: currentBand, previous: previousBand };
+	}
+
+	/**
+	 * Builds the data pairs used for fitting the forecast model.
+	 * Honors props.forecastTrainingWindow ('currentWindow' returns null → caller uses visible data).
+	 */
+	function getForecastTrainingPairs(fullRows, props) {
+		if (!fullRows || !fullRows.length) return null;
+		const mode = props.forecastTrainingWindow || 'last90d';
+		if (mode === 'currentWindow') return null;
+
+		let filtered;
+		if (mode === 'all') {
+			filtered = fullRows;
+		} else {
+			const dayMatch = /^last(\d+)d$/.exec(mode);
+			const pointMatch = /^last(\d+)p$/.exec(mode);
+			if (dayMatch) {
+				const days = parseInt(dayMatch[1], 10);
+				const lastDateNum = fullRows[fullRows.length - 1].dateNum;
+				if (!isFinite(lastDateNum)) return null;
+				filtered = fullRows.filter(r => isFinite(r.dateNum) && r.dateNum >= lastDateNum - days + 1);
+			} else if (pointMatch) {
+				const points = parseInt(pointMatch[1], 10);
+				filtered = fullRows.slice(Math.max(0, fullRows.length - points));
+			} else {
+				return null;
+			}
+		}
+
+		if (!filtered || filtered.length < 4) return null;
+		return filtered.map(r => [r.dateText, r.valNum, r.valText || '']);
 	}
 
 	/**
@@ -203,6 +609,9 @@ function (qlik, $, constantsModule, themesModule, formatters, chart, renderer, p
 			const obj = {
 				dateText: row[0].qText,
 				dateNum: row[0].qNum,
+				// qState reflects the current selection state for this dimension value:
+				// 'S'/'XS' = user-selected, 'O' = optional/possible, 'X' = excluded, 'L' = locked, etc.
+				dateState: row[0].qState || '',
 				valNum: row[1].qNum,
 				valText: row[1].qText || ''
 			};
@@ -259,6 +668,28 @@ function (qlik, $, constantsModule, themesModule, formatters, chart, renderer, p
 		if (sessionButton) {
 			layout.props.currentSelectedButton = sessionButton;
 		}
+	}
+
+	/**
+	 * Reads the active scope quick-button (sessionStorage > stored prop > default) and overrides
+	 * layout.props.kpiScope at runtime. Does not touch trend window — that is independent.
+	 * @returns {string|null} The chosen scope key (e.g. 'mtd'), or null if scope buttons are disabled.
+	 */
+	function setupScopeOverride(layout, elementId) {
+		if (!layout.props.showScopeButtons) return null;
+		const sessionVal = getSelectedScopeButton(elementId);
+		const selectedBtn = sessionVal || layout.props.currentSelectedScopeButton || layout.props.defaultScopeButton || 'button2';
+		let scopeKey;
+		switch (selectedBtn) {
+			case 'button1': scopeKey = layout.props.scopeButton1Value || 'today'; break;
+			case 'button2': scopeKey = layout.props.scopeButton2Value || 'mtd'; break;
+			case 'button3': scopeKey = layout.props.scopeButton3Value || 'ytd'; break;
+			default: return null;
+		}
+		if (!scopeKey) return null;
+		layout.props.kpiScope = scopeKey;
+		layout.props.currentSelectedScopeButton = selectedBtn;
+		return scopeKey;
 	}
 
 	/**
@@ -321,13 +752,42 @@ function (qlik, $, constantsModule, themesModule, formatters, chart, renderer, p
 		// Set up trend window based on quick buttons
 		const renderElementId = (layout && layout.qInfo && layout.qInfo.qId) || $element.attr('id') || $element.data('qv-object') || 'default';
 		setupTrendWindow(layout, renderElementId);
+		// Apply scope quick-button override (mutates layout.props.kpiScope before downstream computations)
+		setupScopeOverride(layout, renderElementId);
 		
 		// Process data and calculate values
 		const fullRows = rows.slice(0);
-		const windowRows = filterByWindow(rows, layout.props);
-		const dataPairs = windowRows.map(row => [row.dateText, row.valNum]);
+
+		// Auto-switch to 'selection' scope when a date selection is active (opt-in via property).
+		// Selection state is read straight from the hypercube — each row carries a qState that
+		// tells us whether the user selected that dimension value. Fully synchronous; no API call.
+		const autoSwitchEnabled = layout.props.showScopeButtons && layout.props.autoSwitchToSelection !== false;
+		const selectionInfo = autoSwitchEnabled ? getSyncSelectionInfoFromRows(fullRows) : null;
+		const selectionActive = !!selectionInfo;
+		if (selectionActive) {
+			layout.props.kpiScope = 'selection';
+		}
+
+		const linkTrend = !!(layout.props.showScopeButtons && layout.props.linkTrendToScope);
+		const currentScope = layout.props.kpiScope || 'full';
+		const linkScopeApplies = linkTrend && PREDEFINED_SCOPES.indexOf(currentScope) !== -1;
+		const windowRows = linkScopeApplies
+			? getLinkedTrendRows(fullRows, currentScope)
+			: filterByWindow(rows, layout.props);
+		const dataPairs = windowRows.map(row => [row.dateText, row.valNum, row.valText]);
 		
-		const aggRowsForKpi = (layout.props.kpiScope === 'window') ? windowRows : fullRows;
+		const kpiScope = layout.props.kpiScope || 'full';
+		let aggRowsForKpi;
+		if (kpiScope === 'window') {
+			aggRowsForKpi = windowRows;
+		} else if (kpiScope === 'full') {
+			aggRowsForKpi = fullRows;
+		} else if (kpiScope === 'selection') {
+			aggRowsForKpi = selectionInfo ? selectionInfo.rows : [];
+			if (!aggRowsForKpi.length) aggRowsForKpi = fullRows; // graceful fallback
+		} else {
+			aggRowsForKpi = filterRowsByScope(fullRows, kpiScope);
+		}
 		const kpiPairs = aggRowsForKpi.map(row => [row.dateText, row.valNum]);
 		const kpiAgg = layout.props.kpiAgg || 'last';
 		const currentVal = computeAggregate(kpiPairs, kpiAgg);
@@ -403,14 +863,59 @@ function (qlik, $, constantsModule, themesModule, formatters, chart, renderer, p
 		// Format primary KPI value using custom settings
 		const kpi1Formatted = formatWithCustomSettings(currentVal, kpi1Fmt, measInfo);
 		const valueHtml = generateValueHtml(layout, colors, fontSizes, currentVal, measInfo, kpi1Formatted);
-		const deltaData = computeDeltaFromRows(fullRows, layout.props.deltaPoints, layout.props.deltaAgg || 'last', layout.props.deltaOffset);
+		const deltaMode = layout.props.deltaMode || 'matchScope';
+		const isPredefinedScope = PREDEFINED_SCOPES.indexOf(kpiScope) !== -1;
+		const isSelectionScope = (kpiScope === 'selection');
+		let deltaData;
+		if (deltaMode === 'matchScope') {
+			if (isSelectionScope) {
+				// Selection scope: index-based shift (previous N rows where N = selection size).
+				deltaData = computeDeltaFromSelectedRows(fullRows, selectionInfo ? selectionInfo.rows : [], kpiAgg);
+			} else if (isPredefinedScope) {
+				// Compare current period vs same-shape previous period using KPI aggregation.
+				deltaData = computeDeltaFromScope(fullRows, kpiScope, kpiAgg);
+			} else {
+				// Full / Window scope has no period boundary — fall back to previous-point comparison.
+				deltaData = computeDeltaFromRows(fullRows, 1, 'last', 1);
+			}
+		} else if (deltaMode === 'calendar') {
+			deltaData = computeDeltaFromCalendar(fullRows, layout.props.deltaCalendarUnit || 'month');
+		} else {
+			deltaData = computeDeltaFromRows(fullRows, layout.props.deltaPoints, layout.props.deltaAgg || 'last', layout.props.deltaOffset);
+		}
 		const deltaHtml = generateDeltaHtml(layout, colors, fontSizes, fullRows, measInfo, deltaData, kpi1Fmt);
-		// Secondary KPI: use second measure from Data>Measures if available
+
+		// Secondary KPI: source is either 2nd measure from Data>Measures or auto previous-period value.
+		const secondarySource = layout.props.secondarySource || 'measure2';
 		const hasSecondMeasure = layout.qHyperCube.qMeasureInfo.length > 1;
-		const secondaryMeasInfo = hasSecondMeasure ? layout.qHyperCube.qMeasureInfo[1] : null;
+		let secondaryMeasInfo = null;
 		let secondaryValue = null;
 		let secondaryFormattedText = null;
-		if (hasSecondMeasure && fullRows.length > 0) {
+
+		if (secondarySource === 'previousPeriod') {
+			// Reuse delta calculation; if showDelta is off, compute one inline so secondary still works.
+			let prevSourceData = deltaData;
+			if (!prevSourceData) {
+				if (deltaMode === 'matchScope') {
+					if (isSelectionScope) {
+						prevSourceData = computeDeltaFromSelectedRows(fullRows, selectionInfo ? selectionInfo.rows : [], kpiAgg);
+					} else if (isPredefinedScope) {
+						prevSourceData = computeDeltaFromScope(fullRows, kpiScope, kpiAgg);
+					} else {
+						prevSourceData = computeDeltaFromRows(fullRows, 1, 'last', 1);
+					}
+				} else if (deltaMode === 'calendar') {
+					prevSourceData = computeDeltaFromCalendar(fullRows, layout.props.deltaCalendarUnit || 'month');
+				} else {
+					prevSourceData = computeDeltaFromRows(fullRows, layout.props.deltaPoints, layout.props.deltaAgg || 'last', layout.props.deltaOffset);
+				}
+			}
+			if (prevSourceData && prevSourceData.prev !== undefined && prevSourceData.prev !== null && !isNaN(prevSourceData.prev)) {
+				secondaryValue = prevSourceData.prev;
+				secondaryMeasInfo = measInfo; // primary measure formatting
+			}
+		} else if (hasSecondMeasure && fullRows.length > 0) {
+			secondaryMeasInfo = layout.qHyperCube.qMeasureInfo[1];
 			const sec2Pairs = aggRowsForKpi.filter(r => r.val2Num !== undefined).map(r => [r.dateText, r.val2Num]);
 			secondaryValue = sec2Pairs.length > 0 ? computeAggregate(sec2Pairs, kpiAgg) : null;
 			if (kpiAgg === 'last' && aggRowsForKpi.length > 0) {
@@ -418,19 +923,43 @@ function (qlik, $, constantsModule, themesModule, formatters, chart, renderer, p
 				if (lastRow.val2Text) secondaryFormattedText = lastRow.val2Text;
 			}
 		}
-		// Format secondary KPI value using custom settings
-		const kpi2FormattedFinal = formatWithCustomSettings(secondaryValue, kpi2Fmt, secondaryMeasInfo);
-		const secondaryHtml = generateSecondaryKpiHtml(layout, colors, fontSizes, secondaryValue, secondaryMeasInfo, kpi2FormattedFinal);
+		// Format secondary KPI value using custom settings (use 1st KPI format when source is previousPeriod).
+		const secondaryFmt = (secondarySource === 'previousPeriod') ? kpi1Fmt : kpi2Fmt;
+		const kpi2FormattedFinal = formatWithCustomSettings(secondaryValue, secondaryFmt, secondaryMeasInfo);
+		const secondaryHtml = generateSecondaryKpiHtml(layout, colors, fontSizes, secondaryValue, secondaryMeasInfo, kpi2FormattedFinal, deltaData);
 		const measureLabelHtml = generateMeasureLabelHtml(layout, colors, fontSizes);
 		const labelsHtml = generateLabelsHtml(layout, colors, fontSizes, startLabel, endLabel);
 		const sparkHtml = generateSparklineHtml(layout, containerHeight, trendSectionHeight);
 		const quickButtonsHtml = generateQuickButtonsHtml(layout, renderElementId);
-		
-		// Build final HTML
+		const scopeButtonsHtml = generateScopeButtonsHtml(layout, renderElementId);
+
+		// Range chips — paired with their respective KPI rows. Chip 1 reflects the period the
+		// 1st KPI summarises; chip 2 reflects the period the delta compares against.
+		// Chips show in every mode EXCEPT 'off' (no hints at all) and 'hover' (hover-only mode
+		// where the only hint is a tooltip on the secondary KPI). Subtitle/tooltip modes still
+		// include chips — they're additive on top of chips, not replacements.
+		const hintMode = layout.props.comparisonHintMode || 'chips';
+		const showChipPair = (hintMode !== 'off' && hintMode !== 'hover') && (layout.props.showDelta !== false);
+		function fmtChipRange(range) {
+			if (!range || !range.startText) return '';
+			if (range.startText === range.endText) return range.startText;
+			return range.startText + ' – ' + range.endText;
+		}
+		let chip1Html = '';
+		let chip2Html = '';
+		if (showChipPair && deltaData) {
+			const c1Label = fmtChipRange(deltaData.currentRange);
+			if (c1Label) chip1Html = generateSelectionChipHtml(layout, { active: true, label: c1Label, variant: 'current' });
+			const c2Label = fmtChipRange(deltaData.previousRange);
+			if (c2Label) chip2Html = generateSelectionChipHtml(layout, { active: true, label: c2Label, variant: 'previous' });
+		}
+
+		// Build final HTML — chip1/chip2 are placed inline with their KPI rows inside the
+		// content wrapper (not in the chrome) so they sit horizontally aligned with the values.
 		const html = buildFinalHtml(
 			darkModeClass, containerStyle, layout, colors,
 			titleHtml, valueHtml, deltaHtml, measureLabelHtml,
-			labelsHtml, sparkHtml, quickButtonsHtml, secondaryHtml, backgroundOverride, fullRows, deltaData
+			labelsHtml, sparkHtml, quickButtonsHtml, secondaryHtml, backgroundOverride, fullRows, deltaData, scopeButtonsHtml, chip1Html, chip2Html
 		);
 		
 		// Render to DOM
@@ -440,7 +969,7 @@ function (qlik, $, constantsModule, themesModule, formatters, chart, renderer, p
 		
 		// Set up sparkline (only if trend is shown)
 		if (layout.props.showTrend !== false) {
-			setupSparkline($element, dataPairs, layout, measInfo, colors);
+			setupSparkline($element, dataPairs, layout, measInfo, colors, fullRows, windowRows);
 		}
 		
 		// Set up event handlers
@@ -458,15 +987,23 @@ function (qlik, $, constantsModule, themesModule, formatters, chart, renderer, p
 	 * @param {Object} measInfo - Measure information
 	 * @param {Object} colors - Color configuration
 	 */
-	function setupSparkline($element, dataPairs, layout, measInfo, colors) {
+	function setupSparkline($element, dataPairs, layout, measInfo, colors, fullRows, windowRows) {
 		const showTrend = layout.props.showTrend !== false; // Default to true if not set
 		if (!showTrend) return; // Skip sparkline setup if trend is hidden
-		
+
 		const $sparklineHost = $element.find(`.${CONSTANTS.SPARKLINE_INNER_CLASS}`);
 		if (!$sparklineHost.length) return; // Exit if sparkline container doesn't exist
-		
+
 		$sparklineHost.css('color', colors.lineColor);
-		
+
+		const tooltipKpi1Fmt = {
+			type: layout.props.kpi1FormatType || 'auto',
+			decimals: layout.props.kpi1FormatDecimals !== undefined ? layout.props.kpi1FormatDecimals : 2,
+			useThousandSep: layout.props.kpi1FormatUseThousandSep !== false,
+			prefix: layout.props.kpi1FormatPrefix || '',
+			suffix: layout.props.kpi1FormatSuffix || ''
+		};
+
 		const opts = {
 			lineColor: colors.lineColor,
 			lineWidth: layout.props.lineWidth,
@@ -503,7 +1040,23 @@ function (qlik, $, constantsModule, themesModule, formatters, chart, renderer, p
 			showForecast: layout.props.showForecast,
 			forecastPeriods: layout.props.forecastPeriods,
 			forecastMethod: layout.props.forecastMethod,
+			forecastTrainingDataPairs: getForecastTrainingPairs(fullRows, layout.props),
 			forecastMovingAvgPeriods: layout.props.forecastMovingAvgPeriods,
+			// Scope quick-button highlight: paint current vs previous period bands behind the trend.
+			scopeHighlight: (layout.props.showScopeButtons && layout.props.showScopeHighlight !== false)
+				? (function(){
+					const bands = computeScopeHighlightBands(fullRows, windowRows, layout.props.kpiScope);
+					if (!bands) return null;
+					return {
+						current: bands.current,
+						previous: bands.previous,
+						currentColor: layout.props.scopeHighlightCurrentColor || '#3b82f6',
+						previousColor: layout.props.scopeHighlightPreviousColor || '#f59e0b',
+						opacity: (layout.props.scopeHighlightOpacity !== undefined && layout.props.scopeHighlightOpacity !== null)
+							? Number(layout.props.scopeHighlightOpacity) : 0.18
+					};
+				})()
+				: null,
 			forecastLineStyle: layout.props.forecastLineStyle,
 			forecastUseThemeColor: layout.props.forecastUseThemeColor,
 			forecastColor: layout.props.forecastColor,
@@ -517,7 +1070,10 @@ function (qlik, $, constantsModule, themesModule, formatters, chart, renderer, p
 			barGradientEnd: (layout.props.barGradient && layout.props.barGradientAuto !== false)
 				? hexToRgba(colors.lineColor, 0.35)
 				: (layout.props.barGradientEnd || colors.lineColor),
-			formatValue: function(v) { return formatNumber(v, measInfo); }
+			formatValue: function(v, valText) {
+				if (tooltipKpi1Fmt.type === 'auto' && valText) return valText;
+				return formatWithCustomSettings(v, tooltipKpi1Fmt, measInfo);
+			}
 		};
 		
 		buildSparkline($sparklineHost, dataPairs, opts);
@@ -598,6 +1154,54 @@ function (qlik, $, constantsModule, themesModule, formatters, chart, renderer, p
 			});
 		}
 		
+		// Scope quick-button click handlers (override kpiScope at runtime, persist via sessionStorage)
+		if (layout.props.showScopeButtons) {
+			const scopeElementId = (layout && layout.qInfo && layout.qInfo.qId) || $element.attr('id') || $element.data('qv-object') || 'default';
+
+			// Selecting a scope (works for both expanded buttons and popup items — both share .kpi-card__scope-btn).
+			$element.find('.kpi-card__scope-btn').off('click').on('click', function(e) {
+				e.stopPropagation();
+				const buttonKey = $(this).data('button');
+				if (!buttonKey) return;
+				saveSelectedScopeButton(scopeElementId, buttonKey);
+				layout.props.currentSelectedScopeButton = buttonKey;
+				$element.find('.kpi-card__scope-btn').removeClass(CONSTANTS.ACTIVE_CLASS);
+				$(this).addClass(CONSTANTS.ACTIVE_CLASS);
+				$element.find('.kpi-card__scope-popup').hide();
+				setTimeout(function() {
+					renderCard($element, layout, matrix);
+				}, CONSTANTS.BUTTON_CLICK_DELAY);
+			});
+
+			// Chip toggles popup visibility.
+			$element.find('.kpi-card__scope-chip').off('click').on('click', function(e) {
+				e.stopPropagation();
+				const $popup = $element.find('.kpi-card__scope-popup');
+				const isOpen = $popup.is(':visible');
+				$popup.css('display', isOpen ? 'none' : 'flex');
+			});
+
+			// Hover feedback for popup items (cheaper than CSS for inline-styled buttons).
+			$element.find('.kpi-card__scope-popup-item').off('mouseenter mouseleave')
+				.on('mouseenter', function() {
+					if ($(this).hasClass(CONSTANTS.ACTIVE_CLASS)) return;
+					const hoverBg = $(this).data('popup-hover-bg') || 'rgba(0,0,0,0.04)';
+					$(this).css('background', hoverBg);
+				})
+				.on('mouseleave', function() {
+					if ($(this).hasClass(CONSTANTS.ACTIVE_CLASS)) return;
+					$(this).css('background', 'transparent');
+				});
+
+			// Click anywhere outside the chip/popup closes the popup.
+			const outsideNs = '.kpi-scope-outside-' + (scopeElementId || 'default');
+			$(document).off('click' + outsideNs).on('click' + outsideNs, function(ev) {
+				if (!$(ev.target).closest('.kpi-card__scope-buttons').length) {
+					$element.find('.kpi-card__scope-popup').hide();
+				}
+			});
+		}
+
 		// Hover effects
 		if (layout.props.hoverValueScale) {
 			$element.find(`.${CONSTANTS.VALUE_CLASS}`).hover(
@@ -714,6 +1318,10 @@ function (qlik, $, constantsModule, themesModule, formatters, chart, renderer, p
 					['border', 'border-bottom', 'border-top', 'border-left', 'border-right', 'box-shadow'].forEach(function(prop) {
 						$card[0].style.removeProperty(prop);
 					});
+					// Always re-apply the user's base border immediately so partial-border / glow / background
+					// indicators don't expose the .kpi-card { border-style: solid !important } default in styles.css
+					// — without an explicit border declaration, all four sides would show at default browser width.
+					restoreLayoutBorder();
 					if ($bar && $bar.length) {
 						$bar.removeClass('active').css({
 							height: '0',
@@ -726,7 +1334,7 @@ function (qlik, $, constantsModule, themesModule, formatters, chart, renderer, p
 							transform: 'none'
 						});
 					}
-					
+
 					if (selected) {
 						$card.addClass('kpi-card--selected');
 						const indicatorType = layout.props.selectedIndicator || 'tapered-bar';
@@ -738,12 +1346,12 @@ function (qlik, $, constantsModule, themesModule, formatters, chart, renderer, p
 								$bar.addClass('active').css({
 									height: '3px',
 									opacity: '1',
-									background: `linear-gradient(90deg, transparent 0%, ${selectedColor}66 20%, ${selectedColor} 50%, ${selectedColor}66 80%, transparent 100%)`,
+									background: `linear-gradient(90deg, transparent 0%, ${selectedColor}66 12%, ${selectedColor} 50%, ${selectedColor}66 88%, transparent 100%)`,
 									boxShadow: `0 0 12px 2px ${selectedColor}88, 0 0 24px 4px ${selectedColor}44, 0 -2px 8px 0 ${selectedColor}`,
 									left: '50%',
 									right: 'auto',
 									transform: 'translateX(-50%)',
-									width: '50%',
+									width: '80%',
 									borderRadius: '2px 2px 0 0'
 								});
 							}

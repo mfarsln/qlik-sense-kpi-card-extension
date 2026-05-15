@@ -384,12 +384,12 @@ define([], function () {
 		'title', 'measureLabel', 'measureLabelPos', 'measureLabelGap', 'align',
 		'showLabelDates', 'labelMaxWidthPct', 'endLabelOffsetPx', 'startLabelRightPadPx', 'labelsGapPx',
 		// Secondary KPI styling
-		'secondaryKpiPosition', 'secondaryLabel', 'secondaryColor', 'secondaryFontSize', 'secondaryFontFamily',
+		'secondaryKpiPosition', 'secondarySource', 'secondaryLabel', 'secondaryColor', 'secondaryFontSize', 'secondaryFontFamily',
 		// Typography
 		'fontMode', 'valueFontSize', 'titleFontSize', 'deltaFontSize', 'measureLabelSize', 'labelFontSize',
 		'valueFontFamily', 'titleFontFamily', 'deltaFontFamily', 'measureLabelFontFamily', 'labelFontFamily',
 		// Colors & theme
-		'theme', 'valueColor', 'titleColor', 'labelColor', 'measureLabelColor', 'backgroundColor', 'borderColor', 'darkMode',
+		'theme', 'valueColor', 'titleColor', 'labelColor', 'measureLabelColor', 'backgroundColor', 'backgroundOpacity', 'borderColor', 'darkMode',
 		// Layout
 		'borderWidth', 'borderRadius', 'padding', 'headerGapPx', 'cardElevation',
 		'useGradient', 'gradientPreset', 'gradientStart', 'gradientEnd', 'gradientDirection',
@@ -397,7 +397,7 @@ define([], function () {
 		'showIcon', 'iconPack', 'iconType', 'iconCustom', 'iconSize', 'iconPosition',
 		// Delta visual
 		'showDelta', 'deltaDisplayType', 'deltaUseShortFormat', 'deltaDecimals', 'deltaFontSize', 'deltaFontFamily',
-		'deltaUpColor', 'deltaDownColor', 'deltaNeutralColor', 'deltaGap', 'showStatusBadge',
+		'deltaUpColor', 'deltaDownColor', 'deltaNeutralColor', 'deltaGap', 'showStatusBadge', 'comparisonHintMode',
 		// Sections / layout ratios
 		'kpiSectionHeight', 'trendSectionHeight', 'sectionGap',
 		// Trend visuals
@@ -406,6 +406,10 @@ define([], function () {
 		'areaGradStartOpacity', 'areaGradEndOpacity', 'showQuickButtons',
 		'button1Value', 'button1Label', 'button2Value', 'button2Label', 'button3Value', 'button3Label',
 		'buttonStyle', 'buttonBackgroundColor', 'buttonLabelColor', 'buttonActiveColor', 'buttonActiveLabelColor',
+		// Scope quick buttons
+		'showScopeButtons', 'scopeButtonsDisplay', 'linkTrendToScope', 'autoSwitchToSelection', 'scopeButton1Value', 'scopeButton1Label', 'scopeButton2Value', 'scopeButton2Label', 'scopeButton3Value', 'scopeButton3Label',
+		'defaultScopeButton', 'scopeButtonStyle', 'scopeButtonBackgroundColor', 'scopeButtonLabelColor', 'scopeButtonActiveColor', 'scopeButtonActiveLabelColor',
+		'showScopeHighlight', 'scopeHighlightCurrentColor', 'scopeHighlightPreviousColor', 'scopeHighlightOpacity',
 		// Selection indicator visuals
 		'selectedIndicator', 'selectedColor',
 		// Number formatting

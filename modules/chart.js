@@ -930,7 +930,7 @@ define(['jquery', './constants'], function ($, constantsModule) {
 	 * @param {number} width - Container width
 	 * @param {Object} opts - Options containing tooltip configuration
 	 */
-	function createTooltip($container, svg, dataPairs, points, width, opts) {
+	function createTooltip($container, svg, dataPairs, points, width, opts, forecastTooltipData) {
 		if (!opts.showTooltip) return;
 
 		const tooltip = document.createElement('div');
@@ -938,31 +938,59 @@ define(['jquery', './constants'], function ($, constantsModule) {
 		tooltip.style.display = 'none';
 		$container.css('position', 'relative')[0].appendChild(tooltip);
 
+		const fData = forecastTooltipData || null;
+		const forecastEnabled = !!(fData && fData.forecastPoints && fData.forecastPoints.length);
+		const totalWidth = (fData && fData.totalWidth) || width;
+		const forecastWidth = forecastEnabled ? Math.max(0, totalWidth - width) : 0;
+
 		svg.addEventListener('mousemove', function(ev) {
 			const rect = svg.getBoundingClientRect();
 			const mx = ev.clientX - rect.left;
+
+			// Forecast slice (right of the actual data area)
+			if (forecastEnabled && mx > width && forecastWidth > 0) {
+				const fPoints = fData.forecastPoints;
+				const fValues = fData.forecastValues || [];
+				const fRatio = Math.max(0, Math.min(1, (mx - width) / forecastWidth));
+				const fIdx = (fPoints.length === 1) ? 0 : Math.round(fRatio * (fPoints.length - 1));
+				const fp = fPoints[fIdx];
+				const fv = fValues[fIdx];
+				if (!fp || fv == null || isNaN(fv)) {
+					tooltip.style.display = 'none';
+					return;
+				}
+				const fLabel = 'Forecast +' + (fIdx + 1);
+				tooltip.innerHTML = fLabel + ' • ' + (opts.formatValue ? opts.formatValue(fv) : String(fv));
+				tooltip.style.left = fp[0] + 'px';
+				tooltip.style.top = fp[1] + 'px';
+				tooltip.style.display = 'block';
+				return;
+			}
+
+			// Actual data area
 			const ratio = (points.length === 1) ? 0 : Math.max(0, Math.min(1, mx / width));
 			const idx = Math.round(ratio * (points.length - 1));
-			
+
 			if (idx < 0 || idx >= dataPairs.length) {
 				tooltip.style.display = 'none';
 				return;
 			}
-			
+
 			const label = dataPairs[idx][0];
 			const val = dataPairs[idx][1];
-			
-			if (val == null || isNaN(val) || points[idx][1] == null) {
+
+			if (val == null || isNaN(val) || !points[idx] || points[idx][1] == null) {
 				tooltip.style.display = 'none';
 				return;
 			}
-			
-			tooltip.innerHTML = label + ' • ' + (opts.formatValue ? opts.formatValue(val) : String(val));
+
+			const valText = dataPairs[idx] && dataPairs[idx][2];
+			tooltip.innerHTML = label + ' • ' + (opts.formatValue ? opts.formatValue(val, valText) : String(val));
 			tooltip.style.left = points[idx][0] + 'px';
 			tooltip.style.top = points[idx][1] + 'px';
 			tooltip.style.display = 'block';
 		});
-		
+
 		svg.addEventListener('mouseleave', function() {
 			tooltip.style.display = 'none';
 		});
@@ -1084,6 +1112,9 @@ define(['jquery', './constants'], function ($, constantsModule) {
 		barGradFillId = 'url(#' + _bgId + ')';
 	}
 	if (defs.childNodes.length) svg.appendChild(defs);
+
+		// Scope highlight is rendered AS line emphasis (post-line) — not as background bands.
+		const hasScopeHighlight = !!(opts && opts.scopeHighlight && (opts.scopeHighlight.current || opts.scopeHighlight.previous));
 
 		const mode = opts && opts.mode ? opts.mode : 'line';
 
@@ -1250,15 +1281,55 @@ define(['jquery', './constants'], function ($, constantsModule) {
 			}
 		}
 
+		// Scope period marker: a faint dashed vertical line at the start of the current period.
+		// Communicates "current period begins here — everything to the left is the previous period"
+		// without overdrawing the trend.
+		if (hasScopeHighlight) {
+			const sh = opts.scopeHighlight;
+			if (sh && sh.current && sh.current.startIdx !== undefined && sh.current.startIdx >= 0 && points[sh.current.startIdx]) {
+				const startX = points[sh.current.startIdx][0];
+				const markerColor = sh.currentColor || '#3b82f6';
+				// scopeHighlightOpacity (default 0.18) was tuned for shaded bands; lift it for a
+				// thin line to stay readable but still feel like a hint, not a hard divider.
+				const baseOp = sh.opacity != null ? Number(sh.opacity) : 0.18;
+				const lineOp = Math.max(0.3, Math.min(0.7, baseOp * 3));
+				const marker = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+				marker.setAttribute('x1', String(startX));
+				marker.setAttribute('y1', String(paddingObj.top));
+				marker.setAttribute('x2', String(startX));
+				marker.setAttribute('y2', String(h + paddingObj.top));
+				marker.setAttribute('stroke', markerColor);
+				marker.setAttribute('stroke-width', '1.5');
+				marker.setAttribute('stroke-opacity', String(lineOp));
+				marker.setAttribute('stroke-dasharray', '4,4');
+				marker.setAttribute('class', 'kpi-card__scope-period-marker');
+				marker.setAttribute('pointer-events', 'none');
+				svg.appendChild(marker);
+			}
+		}
+
 		// Create min/max markers (for all modes except bar)
 		if (mode !== 'bar') {
 			const markers = createMinMaxMarkers(document, dataPairs, points, opts);
 			markers.forEach(marker => svg.appendChild(marker));
 		}
 
+		// Tooltip-relevant references. The forecast block compresses the actual line into
+		// the left 75% of the SVG; if it runs we have to redirect the tooltip to those new
+		// points and width so the displayed value matches the curve under the cursor.
+		let tooltipDisplayPoints = points;
+		let tooltipActualWidth = w;
+		let tooltipForecastPoints = null;
+		let tooltipForecastValues = null;
+
 		// Add forecast line if enabled (for line, area, stepped modes)
 		if (opts && opts.showForecast && (mode === 'line' || mode === 'area' || mode === 'stepped') && dataPairs.length > 3) {
-			const forecastData = generateForecastData(dataPairs, opts);
+			// Fit the forecast model on a broader history (e.g. last 90 days) when provided,
+			// so daily KPIs aren't predicted from only the visible 12-point window.
+			const trainingPairs = (opts.forecastTrainingDataPairs && opts.forecastTrainingDataPairs.length > 3)
+				? opts.forecastTrainingDataPairs
+				: dataPairs;
+			const forecastData = generateForecastData(trainingPairs, opts);
 			if (forecastData && forecastData.points.length > 0) {
 				// Calculate forecast extension - forecast extends BEYOND actual data
 				// Allocate 25% of the total width for forecast area
@@ -1362,6 +1433,13 @@ define(['jquery', './constants'], function ($, constantsModule) {
 					forecastPoints.push([fx, fy]);
 				}
 
+				// Redirect tooltip to use the (compressed) actual points and the forecast points,
+				// otherwise hovering shows phantom values that don't line up with the displayed curve.
+				tooltipDisplayPoints = actualPoints;
+				tooltipActualWidth = actualDataWidth;
+				tooltipForecastPoints = forecastPoints.slice(1); // drop the duplicated last-actual seed
+				tooltipForecastValues = forecastData.points.map(function(p){ return p[1]; });
+
 				// Determine forecast line style
 				var forecastLineStyle = opts.forecastLineStyle || 'dashed';
 				var strokeDasharray = forecastLineStyle === 'dashed' ? '8,4' : (forecastLineStyle === 'dotted' ? '2,4' : 'none');
@@ -1447,9 +1525,14 @@ define(['jquery', './constants'], function ($, constantsModule) {
 
 		// Add SVG to container
 		$container.empty().append(svg);
-		
-		// Create tooltip
-		createTooltip($container, svg, dataPairs, points, w, opts);
+
+		// Create tooltip — pass forecast metadata so hovering inside the forecast slice shows
+		// the predicted value at the visually-correct position rather than phantom actual data.
+		createTooltip($container, svg, dataPairs, tooltipDisplayPoints, tooltipActualWidth, opts, {
+			forecastPoints: tooltipForecastPoints,
+			forecastValues: tooltipForecastValues,
+			totalWidth: w
+		});
 	}
 	return {
 		linearRegression: linearRegression,

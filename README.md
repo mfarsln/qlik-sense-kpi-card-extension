@@ -1,206 +1,191 @@
-
-
 # KPI Card Extension for Qlik Sense
 
-Modern KPI cards with dual measures, responsive typography, tapered selection effects, gradient/glass themes, and portable configuration presets.
+> A modern, feature-rich KPI card extension for Qlik Sense with sparkline trends, forecasting, time-aware comparisons, smart selection handling, and portable configuration presets.
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+![Qlik Sense](https://img.shields.io/badge/Qlik%20Sense-Enterprise%20%7C%20Cloud-009845)
+![Status](https://img.shields.io/badge/status-stable-brightgreen)
 
 ## 📸 Screenshots
 
-### KPI Card
-![Basic KPI Card](https://imagedelivery.net/BdpL1pNKEf9FjxHkN-wXKg/b83d46ec-3e6c-4a30-039d-07183a7ca600/public).
+![KPI Card](https://imagedelivery.net/BdpL1pNKEf9FjxHkN-wXKg/b83d46ec-3e6c-4a30-039d-07183a7ca600/public)
+![KPI Card](https://imagedelivery.net/BdpL1pNKEf9FjxHkN-wXKg/b1e3c69d-7beb-48cb-3652-8762c9110600/public)
+![KPI Card](https://imagedelivery.net/BdpL1pNKEf9FjxHkN-wXKg/dae0ddf1-6570-416c-ecdf-eef885423600/public)
+![KPI Card](https://imagedelivery.net/BdpL1pNKEf9FjxHkN-wXKg/459b324d-5933-4d6a-2e28-585c2d5d7000/public)
 
-![Basic KPI Card](https://imagedelivery.net/BdpL1pNKEf9FjxHkN-wXKg/b1e3c69d-7beb-48cb-3652-8762c9110600/public)
+## ✨ Highlights
 
-![Basic KPI Card](https://imagedelivery.net/BdpL1pNKEf9FjxHkN-wXKg/dae0ddf1-6570-416c-ecdf-eef885423600/public)
-
-![Basic KPI Card](https://imagedelivery.net/BdpL1pNKEf9FjxHkN-wXKg/459b324d-5933-4d6a-2e28-585c2d5d7000/public)
-
-
-*Basic KPI card with sparkline trend*
-
-
-
-## 🚀 Features
-
-- **Single/Dual Measure KPI**: Works with one measure and one date dimension. Add secondary measure for period changes.
-- **Sparkline Trend**: Line/area, smooth or sharp, gradient fill, tooltip + min/max markers
-- **Responsive Design**: Adapts to different screen sizes
-- **Animations**: Value and trend animations
-- **Color Palettes**: Pre-built color themes and custom color options
-- **Quick Trend Buttons**: Fast trend options like 12P, 60P, 1Y
-- **Interaction Options**: Select field value, clear selection, or change variable
-- **Selection Effects**: Tapered neon bar, glow/border styles, background tint
-- **Icons**: Emoji pack, modern line icons, or sanitized custom SVG/HTML
-- **Theme Presets**: Gradient/glass schemes, custom colors, border/shadow/elevation controls
-- **Conditional Background**: Expression-enabled thresholds for background color
-- **Delta Display**: Comparison with previous periods
-- **Tooltip**: Detailed information on hover
-- **Config Presets**: Capture/apply visual/layout JSON to replicate cards
-- **Dark Mode**: Dark theme support
+- **Dual KPI**: primary measure + optional secondary (auto previous-period, 2nd measure, or both)
+- **Sparkline trend** with 5 modes (line, area, bar, dot plot, stepped)
+- **Forecasting**: Holt, Polynomial, Auto-Regressive, Weighted MA, Linear — with confidence intervals and configurable training window
+- **Smart KPI scopes**: Full / Trend Window / Today / WTD / MTD / QTD / YTD / Last 7-30-90 Days / **Selection Range** (auto-switches on date selection)
+- **Calendar-aware delta**: Match KPI Scope (auto), Previous Calendar Period (day/week/month/quarter/year), Previous N points
+- **Period start marker** on the trend so you can see where the current scope begins
+- **Range comparison hints**: chips aligned with KPI rows, subtitle, delta tooltip, or modern hover tooltip — pick one or stack them
+- **Scope quick buttons** (Today / MTD / YTD style) — compact chip dropdown or expanded buttons, optional auto-zoom on trend
+- **Themes & gradient backgrounds**, glass morphism, dark mode, neumorphic shadows
+- **Conditional background** with thresholds (`>`, `≥`, `<`, `≤`, `=`, between)
+- **Selection indicators**: tapered neon bar, side accent, full / partial border, glow halo, background tint
+- **Click actions**: select a field value, change a variable, or clear selections
+- **Modern icons**: emoji set, line icons, or paste your own SVG
+- **Responsive typography** (em-based) or static (px) modes
+- **Config presets**: capture/apply visual settings as portable JSON across cards
 
 ## 📋 Requirements
 
-- Qlik Sense Enterprise, Qlik Cloud
-- 1 Date Dimension
-- 1 or 2 Measure
+- Qlik Sense Enterprise or Qlik Cloud
+- **1 Date Dimension** (required)
+- **1–2 Measures** (1st required, 2nd optional for paired KPI / previous-period display)
 
 ## 🔧 Installation
 
-### 1. Download Files
-Download this repository as ZIP or clone it with `git clone`.
+### Qlik Cloud
+1. **Administration → Extensions** → **Import**
+2. Select the downloaded folder (or zip)
+3. The extension appears under **Custom Objects** on any sheet
 
-*Click "Code" → "Download ZIP" to get the extension files*
+### Qlik Sense Enterprise (Windows / Client-Managed)
+1. Open **Qlik Management Console (QMC)**
+2. Go to **Extensions** → **Import**
+3. Select the folder/zip and confirm
 
-### 2. Install to Qlik Sense
+### Usage
+1. Drag **KPI Card** from **Custom Objects** onto a sheet
+2. Add **1 date dimension** and **1 (or 2) measure(s)**
+3. Configure look & behaviour via the **Properties** panel
 
-#### For Qlik Cloud:
-1. Go to **Administration** → **Extensions**
-2. Click the **Import** button
-3. Select the downloaded folder
-4. Extension will be installed and ready to use
+## ⚙️ Configuration Quick Reference
 
+### Content
+- **Title / Measure Label / Alignment**
+- **KPI Aggregation**: Last, Sum, Average, Min, Max
+- **KPI Scope**: Full data, Trend Window, Selection Range, Today, WTD, MTD, QTD, YTD, Last 7d, Last 30d, Last 90d
+- **Number Format** per KPI (auto / number / percent) with prefix, suffix, decimals, thousand separator
 
-#### For Qlik Sense Server:
-1. Log in to Qlik Management Console
-2. Go to **Extensions** section
-3. Click **Import** button
-4. Select the downloaded folder
-5. Import the extension
+### Scope Quick Buttons
+- **Show / Hide** + **Compact chip** or **Expanded buttons** display style
+- 3 user-configurable buttons (any of the predefined scopes)
+- **Link Trend Window to Scope** — auto-zooms the trend to cover current + previous period
+- **Auto-switch to Selection Range** — when the user makes a date selection the card automatically uses that range; stored scope returns when cleared
 
+### Delta & Status
+- **Delta Mode**:
+  - *Match KPI Scope* — compares current vs previous of the same scope (MTD → previous MTD, etc.)
+  - *Previous N points* with offset (manual)
+  - *Previous Calendar Period* — Day / Week / Month / Quarter / Year
+- **Compared Date Ranges Hint**: chips, subtitle, delta tooltip, modern hover tooltip, or any combination
+- Display type: percentage or absolute (with optional K/M/B short format)
+- Status badge (▲ / ▼ / ■) with theme-aware colours
 
-### 3. Usage
-1. Create a new sheet
-2. Select **KPI Card** from **Custom Objects** panel
-3. Add one date dimension and one measure
-4. Customize appearance from Properties panel
+### Trend
+- Mode: line, area, bar, dot plot, stepped
+- Corners: sharp or smooth
+- Quick range buttons (12P / 60P / 1Y by default, fully configurable)
+- Area gradient fill (vertical/horizontal)
+- Min/max pulse markers, glow filter, tooltip on hover
 
+### Forecast
+- Method: Holt Exponential Smoothing (default), Polynomial Regression, Auto-Regressive, Weighted Moving Average, Linear Regression
+- 1–60 forecast periods
+- **Training Data window**: Current Trend Window / Last 30-90-180-365 days / Last 12-30-60-120 points / All data
+- Confidence interval shading (80% / 90% / 95%)
+- Line style (dashed/dotted/solid), opacity, custom color
 
-## ⚙️ Configuration
+### Appearance
+- Theme presets (Custom, Slate, Ocean, Sunset, Emerald, Violet, Glass morphism)
+- Background opacity, gradient backgrounds (8 presets + custom)
+- Card elevation: subtle / medium / strong / neumorphic
+- Border, border radius, padding
+- Conditional background by threshold
 
-### Basic Settings
-- **Title**: KPI title
-- **Measure Label**: Measure label
-- **Alignment**: Alignment (Left, Center, Right)
-
-### Font Settings
-- **Font Mode**: Static (px) or Responsive (em)
-- Font sizes and families
-- Automatic sizing in responsive mode
-
-### Color Settings
-- **Color Palette**: Pre-built themes (Slate, Ocean, Sunset, Emerald, Violet)
-- **Custom Colors**: Custom color options
-- **Trend Palette**: Separate color palette for trend charts
-
-### Trend Settings
-- **Trend Mode**: Line or Area
-- **Trend Corners**: Sharp or Smooth
-- **Trend Window**: All data, Last N points, Last N days
-- **Quick Buttons**: 12P, 60P, 1Y quick options
-
-### Animations
-- **Animate Draw**: Line drawing animation
-- **Animate Value**: KPI value animation
-- **Animate Delta**: Delta change animation
-- **Animate Pulse**: Min/Max point animation
+### Interaction
+- **Click action**: select field value, change variable value, clear selections
+- **Selected indicator**: Neon Bar, Side Accent, Border, Bottom Border, Top Border, Glow Effect, Background Tint
 
 ### Effects
-- **Glow Effect**: Light effect
-- **Tooltip**: Hover information box
-- **Min/Max Markers**: Lowest/highest value markers
-- **Hover Effects**: Mouse hover effects
+- Hover scale on KPI value
+- Hover line-thickness multiplier
+- Counter animation, line draw animation, area fade-in, delta slide-in
+- Min/max pulse animation
+- Glow filter on trend
+
+### Config Presets
+- **Capture** — serialises all visual properties as JSON
+- **Apply** — paste JSON into another card and apply for instant theme propagation
 
 ## 📊 Data Structure
 
-The extension expects the following data structure:
-- **1 Date Dimension**: Date/time data
-- **1 Measure**: Numeric value
-
-Example data:
 ```
-Date         | Sales
--------------|-------
-2024-01-01   | 1500
-2024-01-02   | 1800
-2024-01-03   | 1200
+Date         | Revenue   | (Optional 2nd Measure)
+-------------|-----------|------------------------
+2026-01-01   | 1500      | ...
+2026-01-02   | 1800      | ...
+2026-01-03   | 1200      | ...
 ```
 
-## 🎨 Example Use Cases
+### 💡 Pro Tip — Cumulative Measure Pattern
 
-- **Sales KPI**: Daily sales and trends
-- **Customer Count**: Active customer count and growth
-- **Revenue**: Monthly revenue and trend analysis
-- **Performance**: System performance metrics
+To unlock **comparison features even with date selections** (the engine otherwise filters to selected dates only), use a cumulative measure:
 
-## 🔧 Advanced Features
+```qlik
+sum({<Date={"<=$(vMaxDate)"}>} Revenue)
+```
 
-### Responsive Font Sizing
-In responsive mode, font sizes are automatically adjusted based on container size:
-- Smaller fonts on small screens
-- Larger fonts on large screens
+…with a variable:
 
-### Session Storage
-Quick button selections are stored in browser session and preserved on page refresh.
+```qlik
+vMaxDate = =Max(Date)
+```
 
-### Delta Calculation
-Flexible settings for comparison with previous periods:
-- **Delta Mode**: Points-based
-- **Delta Points**: Number of points to compare
-- **Delta Offset**: How many periods back to look
-- **Delta Aggregation**: Sum, Average, Last
+This expands the hypercube so previous-period calculations have access to all history. The extension's `Auto-switch to Selection Range` then takes over and uses the user's selected range as the current period.
+
+## 🎨 Use Cases
+
+- Sales / Revenue KPIs with month-over-month, year-over-year comparison
+- Operational dashboards with trend forecasting
+- Executive scorecards with smart scope toggling
+- Multi-card dashboards with consistent styling via Config Presets
 
 ## 🐛 Troubleshooting
 
-### Common Issues
-
-**Extension not visible:**
-- Restart Qlik Sense
-- Re-import the extension
-
-**No data visible:**
-- Make sure you added 1 date dimension and 1 measure
-- Check that date format is correct in your data model
-
-**Animations not working:**
-- Check if browser supports JavaScript
-- Make sure you're using an up-to-date version of Qlik Sense
+**Extension not visible**: restart Qlik Sense or re-import the extension.
+**No data shown**: ensure exactly one date dimension and at least one measure are added.
+**Forecast not rendering**: requires at least 4 data points and trend mode line / area / stepped (not bar / dots).
+**Chips overlapping value**: chips are absolutely positioned on the right and may overlap very long numbers — widen the card or pick a shorter format.
 
 ## 📝 Version History
 
-### v1.0.0
-- Initial release
-- Basic KPI card features
-- Sparkline trend charts
-- Responsive design
-- Animations and effects
+### v2.0
+- Selection-aware KPI scope (auto-switch on date selection)
+- Calendar-aware delta with day/week/month/quarter/year units
+- Match KPI Scope delta mode for natural MTD-vs-Previous-MTD comparisons
+- Period start marker on trend
+- Range comparison chips, subtitle, delta tooltip, modern hover tooltip
+- Forecast training window decoupled from trend window
+- Side Accent selection indicator
+- Linked trend window to KPI scope
+- 'Today' scope and quick-button presets
+- Comprehensive Config Presets (capture / apply)
+
+### v1.0
+- Initial release with KPI + sparkline trend
+- Theme presets, gradient backgrounds, dark mode
+- Click interactions, selection indicators
+- Quick trend buttons, animation suite
 
 ## 🤝 Contributing
 
-This extension is open source. We welcome your contributions!
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Create a Pull Request
+PRs welcome — fork the repo, branch from `main`, and open a pull request describing the change. For bug reports, please use **GitHub Issues** with a clear repro (Qlik version, screenshots, expected vs actual).
 
 ## 📄 License
 
-This project is licensed under the MIT License. See the `LICENSE` file for details.
+[MIT License](LICENSE) — feel free to use, modify, and distribute.
 
-## 👨‍💻 Developer
+## 👨‍💻 Author
 
-**f.arslan** - Qlik Sense Extension Developer
-
-## 📞 Contact
-
-You can use GitHub Issues for your questions.
+**f.arslan** — Qlik Sense Extension Developer
+[LinkedIn](https://www.linkedin.com/in/mfarsln/)
 
 ---
 
-⭐ If you liked this extension, don't forget to give it a star!
-
-
-
-
-
+⭐ If this extension helped you, please star the repo — it makes a real difference for discoverability.

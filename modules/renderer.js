@@ -20,6 +20,7 @@ define(['qlik', './constants', './formatters', './chart'], function (qlik, const
 	var formatDate               = formatters.formatDate;
 	var hexToRgba                = formatters.hexToRgba;
 	var getSelectedButton        = formatters.getSelectedButton;
+	var getSelectedScopeButton   = formatters.getSelectedScopeButton;
 
 	// ── HTML Generation Functions ─────────────────────────────────────────────
 
@@ -249,7 +250,14 @@ define(['qlik', './constants', './formatters', './chart'], function (qlik, const
 			case 'top-border':
 				return `border-top:4px solid ${selectedColor} !important;`;
 			case 'glow':
-				return `box-shadow:0 0 20px ${selectedColor}, inset 0 0 20px ${hexToRgba(selectedColor, 0.25)} !important;`;
+				// Outer shadows get clipped by Qlik's wrapper (overflow:hidden), so use a wide
+				// inset for ambient interior glow. Large blur (60–110px) + low alpha keeps it
+				// from reading as a gradient background — just a hint of "lit".
+				return `box-shadow:inset 0 0 60px ${selectedColor}33, inset 0 0 110px ${selectedColor}1A !important;`;
+			case 'side-accent':
+				// Vertical accent bar on the left edge with a soft inward fade. Uses inset shadows
+				// so the user's layout border (top/right/bottom) is preserved intact.
+				return `box-shadow:inset 4px 0 0 0 ${selectedColor}, inset 10px 0 14px -6px ${selectedColor}66 !important;`;
 			case 'background':
 				return `background:${hexToRgba(selectedColor, 0.15)} !important;`;
 			default:
@@ -406,10 +414,17 @@ define(['qlik', './constants', './formatters', './chart'], function (qlik, const
 		}
 		
 		// Set initial animation state if delta animation is enabled
-		const animationStyle = layout.props.animateDelta ? 
+		const animationStyle = layout.props.animateDelta ?
 			`opacity:0;transform:translateX(-10px);transition:opacity ${layout.props.deltaAnimDuration || CONSTANTS.DEFAULT_DELTA_ANIMATION_DURATION}ms ease,transform ${layout.props.deltaAnimDuration || CONSTANTS.DEFAULT_DELTA_ANIMATION_DURATION}ms ease;` : '';
-		
-		return `<div class="kpi-card__delta" style="display:inline-block;margin-left:${layout.props.deltaGap || CONSTANTS.DEFAULT_DELTA_GAP}px;color:${col};font-size:${fontSizes.deltaFontSize};font-family:${layout.props.deltaFontFamily || CONSTANTS.DEFAULT_FONT_FAMILY};${animationStyle}">${sign} ${displayValue}</div>`;
+
+		// Comparison hint tooltip — added to delta when mode opts in. Chips are independent.
+		const hintMode = layout.props.comparisonHintMode || 'chips';
+		const showTooltip = (hintMode === 'tooltip' || hintMode === 'both' || hintMode === 'all');
+		const rangeText = showTooltip ? buildComparisonRangeText(precomputedDelta) : '';
+		const titleAttr = rangeText ? ` title="Compared periods: ${rangeText}"` : '';
+		const cursorStyle = rangeText ? 'cursor:help;' : '';
+
+		return `<div class="kpi-card__delta"${titleAttr} style="display:inline-block;margin-left:${layout.props.deltaGap || CONSTANTS.DEFAULT_DELTA_GAP}px;color:${col};font-size:${fontSizes.deltaFontSize};font-family:${layout.props.deltaFontFamily || CONSTANTS.DEFAULT_FONT_FAMILY};${cursorStyle}${animationStyle}">${sign} ${displayValue}</div>`;
 	}
 
 	/**
@@ -421,13 +436,86 @@ define(['qlik', './constants', './formatters', './chart'], function (qlik, const
 	 * @param {Object} measInfo - Measure information
 	 * @returns {string} Secondary KPI HTML
 	 */
-	function generateSecondaryKpiHtml(layout, colors, fontSizes, secondaryValue, secondaryMeasInfo, preFormattedText) {
-		// Only show secondary KPI if a second measure was added in Data>Measures
+	/**
+	 * Builds the modern hover-tooltip HTML for the secondary KPI. Two coloured rows show the
+	 * current and previous date ranges; visibility is purely CSS-driven (see styles.css). Returns
+	 * '' when either range is missing.
+	 */
+	function buildCompareHoverTipHtml(layout, deltaData) {
+		if (!deltaData || !deltaData.currentRange || !deltaData.previousRange) return '';
+		const cr = deltaData.currentRange;
+		const pr = deltaData.previousRange;
+		const cLabel = (cr.startText && cr.endText && cr.startText !== cr.endText)
+			? cr.startText + ' – ' + cr.endText
+			: (cr.startText || '');
+		const pLabel = (pr.startText && pr.endText && pr.startText !== pr.endText)
+			? pr.startText + ' – ' + pr.endText
+			: (pr.startText || '');
+		if (!cLabel || !pLabel) return '';
+		const currentColor = layout.props.scopeButtonActiveColor || '#3b82f6';
+		const isDark = !!layout.props.darkMode;
+		const previousColor = isDark ? 'rgba(229,231,235,0.55)' : 'rgba(100,116,139,0.7)';
+		return ''
+			+ '<div class="kpi-card__compare-hover-tip">'
+			+   '<div class="kpi-card__compare-hover-tip-inner">'
+			+     '<div class="kpi-card__compare-hover-tip-row">'
+			+       '<span class="kpi-card__compare-hover-tip-dot" style="background:' + currentColor + ';"></span>'
+			+       '<div>'
+			+         '<div class="kpi-card__compare-hover-tip-label">Current</div>'
+			+         '<div class="kpi-card__compare-hover-tip-dates">' + cLabel + '</div>'
+			+       '</div>'
+			+     '</div>'
+			+     '<div class="kpi-card__compare-hover-tip-row">'
+			+       '<span class="kpi-card__compare-hover-tip-dot" style="background:' + previousColor + ';"></span>'
+			+       '<div>'
+			+         '<div class="kpi-card__compare-hover-tip-label">Previous</div>'
+			+         '<div class="kpi-card__compare-hover-tip-dates">' + pLabel + '</div>'
+			+       '</div>'
+			+     '</div>'
+			+   '</div>'
+			+ '</div>';
+	}
+
+	/**
+	 * Builds a human-friendly "Apr 1-15 vs Mar 1-15" string from a delta payload that carries
+	 * currentRange/previousRange. Returns '' if either range is missing.
+	 */
+	function buildComparisonRangeText(deltaData) {
+		if (!deltaData || !deltaData.currentRange || !deltaData.previousRange) return '';
+		const cr = deltaData.currentRange;
+		const pr = deltaData.previousRange;
+		function fmt(range) {
+			if (!range || !range.startText) return '';
+			if (range.startText === range.endText) return range.startText;
+			return range.startText + ' – ' + range.endText;
+		}
+		const curText = fmt(cr);
+		const prevText = fmt(pr);
+		if (!curText || !prevText) return '';
+		return curText + ' vs ' + prevText;
+	}
+
+	function generateSecondaryKpiHtml(layout, colors, fontSizes, secondaryValue, secondaryMeasInfo, preFormattedText, deltaData) {
+		// Only show secondary KPI if data is available
 		if (secondaryValue === null || secondaryValue === undefined) return '';
 
-		// Use second measure's label from Qlik (qFallbackTitle), or custom label from props
+		// Default label depends on source: previous-period gets a "Previous (<unit>)" hint, otherwise the 2nd measure's title.
 		let label = '';
-		if (secondaryMeasInfo && secondaryMeasInfo.qFallbackTitle) {
+		const isPrevSource = (layout.props.secondarySource === 'previousPeriod');
+		if (isPrevSource) {
+			const deltaMode = layout.props.deltaMode || 'matchScope';
+			if (deltaMode === 'matchScope') {
+				const scope = layout.props.kpiScope || 'full';
+				const scopeLabels = { today: 'Day', wtd: 'WTD', mtd: 'MTD', qtd: 'QTD', ytd: 'YTD', last7d: 'Last 7d', last30d: 'Last 30d', last90d: 'Last 90d' };
+				label = scopeLabels[scope] ? ('Previous ' + scopeLabels[scope]) : 'Previous';
+			} else if (deltaMode === 'calendar') {
+				const unit = layout.props.deltaCalendarUnit || 'month';
+				const unitLabel = unit.charAt(0).toUpperCase() + unit.slice(1);
+				label = 'Previous ' + unitLabel;
+			} else {
+				label = 'Previous';
+			}
+		} else if (secondaryMeasInfo && secondaryMeasInfo.qFallbackTitle) {
 			label = secondaryMeasInfo.qFallbackTitle;
 		}
 		const labelProp = layout.props.secondaryLabel;
@@ -448,16 +536,34 @@ define(['qlik', './constants', './formatters', './chart'], function (qlik, const
 		const formatted = preFormattedText || formatNumber(secondaryValue, secondaryMeasInfo);
 		const isRightPosition = (layout.props.secondaryKpiPosition === 'right');
 
+		// Comparison hint subtitle — added under the secondary KPI when the user opts in to it.
+		// Chips render independently (controlled by the same property but additive, not exclusive).
+		const hintMode = layout.props.comparisonHintMode || 'chips';
+		const showSubtitle = (hintMode === 'subtitle' || hintMode === 'both' || hintMode === 'all');
+		const rangeText = showSubtitle ? buildComparisonRangeText(deltaData) : '';
+		const subtitlePx = Math.max(9, Math.round((parseFloat(fontSizeValue) || 14) * 0.62));
+		const subtitleHtml = rangeText
+			? `<div class="kpi-card__secondary-hint" style="font-size:${subtitlePx}px;color:${color};opacity:0.7;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${rangeText}</div>`
+			: '';
+
+		// Hover tooltip — attached to the secondary KPI; appears on hover via CSS.
+		const showHover = (hintMode === 'hover' || hintMode === 'all');
+		const hoverTipHtml = showHover ? buildCompareHoverTipHtml(layout, deltaData) : '';
+		const triggerClass = hoverTipHtml ? ' kpi-card__compare-hover-trigger' : '';
+
 		if (isRightPosition) {
 			// Right position: label above value (same layout style as 1st KPI with title above value)
 			const titleFontSize = fontSizes.titleFontSize || (Math.round(primarySizePx * 0.4) + 'px');
 			const labelAbove = label ? `<div style="font-size:${titleFontSize};color:${color};opacity:0.8;margin-bottom:4px;">${label}</div>` : '';
-			return `<div class="kpi-card__secondary" style="display:flex;flex-direction:column;align-items:flex-end;">${labelAbove}<div style="color:${color};font-size:${fontSizeValue};font-family:${fontFamily};">${formatted}</div></div>`;
+			// NOTE: NO position:relative here — the hover tooltip needs to be positioned relative
+			// to the kpi-card so it can use its full width/height without being clipped by the
+			// (typically narrow) secondary KPI block.
+			return `<div class="kpi-card__secondary${triggerClass}" style="display:flex;flex-direction:column;align-items:flex-end;">${labelAbove}<div style="color:${color};font-size:${fontSizeValue};font-family:${fontFamily};">${formatted}</div>${subtitleHtml}${hoverTipHtml}</div>`;
 		}
 
-		// Below position: label inline with value
+		// Below position: label inline with value (also no position:relative — see note above)
 		const labelHtml = label ? `<span style="font-style:italic;">${label}</span>: ` : '';
-		return `<div class="kpi-card__secondary" style="color:${color};font-size:${fontSizeValue};font-family:${fontFamily};opacity:0.9;">${labelHtml}${formatted}</div>`;
+		return `<div class="kpi-card__secondary${triggerClass}" style="color:${color};font-size:${fontSizeValue};font-family:${fontFamily};opacity:0.9;"><div>${labelHtml}${formatted}</div>${subtitleHtml}${hoverTipHtml}</div>`;
 	}
 
 	/**
@@ -528,6 +634,8 @@ define(['qlik', './constants', './formatters', './chart'], function (qlik, const
 	 */
 	function generateQuickButtonsHtml(layout, elementId) {
 		if (!layout.props.showQuickButtons || layout.props.showTrend === false) return '';
+		// Suppressed when the trend window is being driven by the KPI scope buttons (linkTrendToScope on).
+		if (layout.props.showScopeButtons && layout.props.linkTrendToScope) return '';
 		
 		const buttonStyle = layout.props.buttonStyle || CONSTANTS.DEFAULT_BUTTON_STYLE;
 		const buttonClass = `kpi-card__quick-btn kpi-card__quick-btn--${buttonStyle}`;
@@ -563,6 +671,122 @@ define(['qlik', './constants', './formatters', './chart'], function (qlik, const
 	}
 
 	/**
+	 * Renders a minimal range chip pill — used for both the "current period" and "previous period"
+	 * indicators that sit on the right edge of their respective KPI rows. The `variant` field
+	 * ('current' | 'previous') drives the dot colour so the two chips read as a pair.
+	 */
+	function generateSelectionChipHtml(layout, selectionInfo) {
+		if (!layout || !layout.props) return '';
+		if (!selectionInfo || !selectionInfo.active) return '';
+
+		const label = selectionInfo.label
+			|| (selectionInfo.startText && selectionInfo.endText && selectionInfo.startText !== selectionInfo.endText
+				? selectionInfo.startText + ' – ' + selectionInfo.endText
+				: (selectionInfo.startText || ''));
+		if (!label) return '';
+
+		const isDark = !!layout.props.darkMode;
+		const variant = selectionInfo.variant || 'current';
+		const accent = (variant === 'previous')
+			? (isDark ? 'rgba(229,231,235,0.55)' : 'rgba(100,116,139,0.7)') // muted grey for previous
+			: (layout.props.scopeButtonActiveColor || '#3b82f6');             // accent for current
+		const fg = isDark ? 'rgba(229,231,235,0.85)' : 'rgba(55,65,81,0.8)';
+		const bg = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)';
+		const tip = (variant === 'previous') ? 'Previous period' : 'Current period';
+
+		return '<div class="kpi-card__selection-chip kpi-card__selection-chip--' + variant + '" title="' + tip + ': ' + label + '" style="font-size:8px;color:' + fg + ';background:' + bg + ';border-radius:6px;padding:1px 5px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;display:inline-flex;align-items:center;">' +
+			'<span style="display:inline-block;width:4px;height:4px;border-radius:50%;background:' + accent + ';margin-right:4px;flex-shrink:0;"></span>' +
+			'<span style="overflow:hidden;text-overflow:ellipsis;">' + label + '</span>' +
+		'</div>';
+	}
+
+	/**
+	 * Generates the KPI scope quick-button bar (Today / MTD / YTD …) — independent of trend window buttons.
+	 */
+	function generateScopeButtonsHtml(layout, elementId) {
+		if (!layout.props.showScopeButtons) return '';
+
+		const buttonStyle = layout.props.scopeButtonStyle || 'rounded';
+		const activeColor = layout.props.scopeButtonActiveColor || '#3b82f6';
+		const activeLabelColor = layout.props.scopeButtonActiveLabelColor || '#ffffff';
+		const inactiveBg = layout.props.scopeButtonBackgroundColor || 'rgba(255,255,255,0.1)';
+		const inactiveLabel = layout.props.scopeButtonLabelColor || '';
+		const displayMode = layout.props.scopeButtonsDisplay || 'chip';
+
+		let baseStyle;
+		let radiusPx = '6px';
+		switch (buttonStyle) {
+			case 'minimal':
+				baseStyle = 'background:' + inactiveBg + ';border:1px solid rgba(255,255,255,0.2);color:' + (inactiveLabel || 'inherit') + ';';
+				radiusPx = '4px';
+				break;
+			case 'pill':
+				baseStyle = 'background:' + inactiveBg + ';border:none;border-radius:20px;color:' + (inactiveLabel || 'inherit') + ';';
+				radiusPx = '20px';
+				break;
+			default:
+				baseStyle = 'background:' + inactiveBg + ';border:none;border-radius:6px;color:' + (inactiveLabel || 'inherit') + ';';
+				radiusPx = '6px';
+		}
+
+		const sessionBtn = getSelectedScopeButton(elementId);
+		const current = sessionBtn || layout.props.currentSelectedScopeButton || layout.props.defaultScopeButton || 'button2';
+
+		const labels = {
+			button1: layout.props.scopeButton1Label || 'Today',
+			button2: layout.props.scopeButton2Label || 'MTD',
+			button3: layout.props.scopeButton3Label || 'YTD'
+		};
+
+		// ── Expanded buttons mode (legacy / opt-in for wider cards) ──
+		if (displayMode === 'buttons') {
+			function btnHtml(key, label) {
+				const isActive = (current === key);
+				const activeStyle = isActive ? ('background:' + activeColor + '!important;color:' + activeLabelColor + '!important;') : '';
+				const cls = 'kpi-card__scope-btn' + (isActive ? ' ' + CONSTANTS.ACTIVE_CLASS : '');
+				return '<button class="' + cls + '" data-button="' + key + '" style="' + baseStyle + activeStyle + 'padding:4px 10px;font-size:10px;cursor:pointer;transition:all 0.2s ease;">' + label + '</button>';
+			}
+			return '<div class="kpi-card__scope-buttons" style="display:flex;gap:4px;">' +
+				btnHtml('button1', labels.button1) +
+				btnHtml('button2', labels.button2) +
+				btnHtml('button3', labels.button3) +
+			'</div>';
+		}
+
+		// ── Chip + dropdown mode (default) ──
+		const isDark = !!layout.props.darkMode;
+		const popupBg = isDark ? 'rgba(38,38,42,0.98)' : 'rgba(255,255,255,0.98)';
+		const popupBorder = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)';
+		const popupShadow = isDark ? '0 6px 20px rgba(0,0,0,0.6)' : '0 6px 20px rgba(0,0,0,0.18)';
+		const popupItemDefaultColor = isDark ? '#e5e7eb' : '#1f2937';
+		const popupHoverBg = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)';
+
+		const chipLabel = labels[current] || labels.button2;
+		// Chip itself is filled with active color so the user always sees the current scope.
+		const chipStyle = 'background:' + activeColor + ';color:' + activeLabelColor + ';border:none;border-radius:' + radiusPx + ';padding:4px 10px;font-size:10px;cursor:pointer;transition:all 0.2s ease;display:inline-flex;align-items:center;gap:6px;line-height:1;';
+
+		function popupItemHtml(key, label) {
+			const isActive = (current === key);
+			const itemBg = isActive ? activeColor : 'transparent';
+			const itemColor = isActive ? activeLabelColor : popupItemDefaultColor;
+			const cls = 'kpi-card__scope-btn kpi-card__scope-popup-item' + (isActive ? ' ' + CONSTANTS.ACTIVE_CLASS : '');
+			return '<button class="' + cls + '" data-button="' + key + '" data-popup-hover-bg="' + popupHoverBg + '" style="background:' + itemBg + ';color:' + itemColor + ';border:none;border-radius:4px;padding:6px 12px;font-size:11px;cursor:pointer;text-align:left;transition:background 0.15s ease;width:100%;display:block;">' + label + '</button>';
+		}
+
+		return '<div class="kpi-card__scope-buttons kpi-card__scope-buttons--chip" style="position:relative;display:inline-flex;">' +
+			'<button class="kpi-card__scope-chip" style="' + chipStyle + '">' +
+				'<span>' + chipLabel + '</span>' +
+				'<span style="font-size:9px;opacity:0.85;">▾</span>' +
+			'</button>' +
+			'<div class="kpi-card__scope-popup" style="display:none;position:absolute;top:calc(100% + 4px);left:0;min-width:90px;background:' + popupBg + ';border:1px solid ' + popupBorder + ';border-radius:8px;box-shadow:' + popupShadow + ';padding:4px;z-index:200;flex-direction:column;gap:2px;">' +
+				popupItemHtml('button1', labels.button1) +
+				popupItemHtml('button2', labels.button2) +
+				popupItemHtml('button3', labels.button3) +
+			'</div>' +
+		'</div>';
+	}
+
+	/**
 	 * Builds final HTML structure
 	 * @param {string} darkModeClass - Dark mode CSS class
 	 * @param {string} containerStyle - Container style
@@ -578,7 +802,7 @@ define(['qlik', './constants', './formatters', './chart'], function (qlik, const
 	 * @param {Array} fullRows - Full rows data for status badge
 	 * @returns {string} Final HTML
 	 */
-	function buildFinalHtml(darkModeClass, containerStyle, layout, colors, titleHtml, valueHtml, deltaHtml, measureLabelHtml, labelsHtml, sparkHtml, quickButtonsHtml, secondaryHtml, backgroundOverride, fullRows, deltaData) {
+	function buildFinalHtml(darkModeClass, containerStyle, layout, colors, titleHtml, valueHtml, deltaHtml, measureLabelHtml, labelsHtml, sparkHtml, quickButtonsHtml, secondaryHtml, backgroundOverride, fullRows, deltaData, scopeButtonsHtml, chip1Html, chip2Html) {
 		const padding = layout.props.padding || CONSTANTS.DEFAULT_PADDING;
 		const borderWidth = layout.props.borderWidth || CONSTANTS.DEFAULT_BORDER_WIDTH;
 		const borderRadius = layout.props.borderRadius || CONSTANTS.DEFAULT_BORDER_RADIUS;
@@ -617,19 +841,43 @@ define(['qlik', './constants', './formatters', './chart'], function (qlik, const
 
 		const mainKpiRow = buildValueBlock(valueContent);
 
+		// Chips are absolutely-positioned on the right edge of each row, so the underlying KPI
+		// value keeps its natural width — no flex squeeze, no truncation. They overlap only if
+		// the value is wider than (card width − chip width), at which point the user can widen
+		// the card or pick a shorter number format.
+		// We use `right: -padding` so the chip is flush with the card edge (not the kpi-layer's
+		// padded content edge), which would otherwise leave a visible gap on the right.
+		const chip1 = chip1Html || '';
+		const chip2 = chip2Html || '';
+		const chipRightOffset = -padding;
+		const mainKpiRowAligned = chip1
+			? `<div style="position:relative;width:100%;">${mainKpiRow}<div style="position:absolute;top:50%;right:${chipRightOffset}px;transform:translateY(-50%);pointer-events:none;">${chip1}</div></div>`
+			: mainKpiRow;
+
 		// ═══════ CONTENT WRAPPER - layout modes ═══════
 		let contentWrapper;
 
 		if (is3ColumnLayout) {
 			// ── 3-Column Layout: [1st KPI] [spacer] [2nd KPI] ──
-			const leftCol = `<div style="flex-shrink:0;display:flex;flex-direction:column;align-items:flex-start;">${titleHtml}${titleGap}${mainKpiRow}</div>`;
+			// Chip 2 sits under the secondary on the right column. Chip 1 still floats over the main row.
+			const secondaryWithChip = chip2
+				? `<div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">${secondaryHtml}${chip2}</div>`
+				: secondaryHtml;
+			const leftCol = `<div style="flex-shrink:0;display:flex;flex-direction:column;align-items:flex-start;width:100%;">${titleHtml}${titleGap}${mainKpiRowAligned}</div>`;
 			const centerCol = `<div style="flex:1;"></div>`;
-			const rightCol = `<div style="flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;">${secondaryHtml}</div>`;
+			const rightCol = `<div style="flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;">${secondaryWithChip}</div>`;
 			contentWrapper = `<div style="display:flex;align-items:center;width:100%;gap:12px;">${leftCol}${centerCol}${rightCol}</div>`;
 		} else {
-			// ── Standard vertical layout ──
-			const secondaryBelow = (secondaryKpiPosition === 'below' && secondaryHtml) ? `<div style="margin-top:4px;">${secondaryHtml}</div>` : '';
-			contentWrapper = `<div style="display:flex;flex-direction:column;align-items:${alignItemsCss};width:100%;">${titleHtml}${titleGap}${mainKpiRow}${secondaryBelow}</div>`;
+			// ── Standard vertical layout — chip 2 floats over the secondary row (or empty row) ──
+			const hasSecondary = (secondaryKpiPosition === 'below' && secondaryHtml);
+			let secondaryRowAligned = '';
+			if (hasSecondary || chip2) {
+				const secondaryContent = hasSecondary ? secondaryHtml : '';
+				secondaryRowAligned = chip2
+					? `<div style="position:relative;width:100%;margin-top:4px;${hasSecondary ? '' : 'min-height:14px;'}">${secondaryContent}<div style="position:absolute;top:50%;right:${chipRightOffset}px;transform:translateY(-50%);pointer-events:none;">${chip2}</div></div>`
+					: `<div style="margin-top:4px;">${secondaryContent}</div>`;
+			}
+			contentWrapper = `<div style="display:flex;flex-direction:column;align-items:${alignItemsCss};width:100%;">${titleHtml}${titleGap}${mainKpiRowAligned}${secondaryRowAligned}</div>`;
 		}
 
 		const showTrend = layout.props.showTrend !== false;
@@ -639,7 +887,13 @@ define(['qlik', './constants', './formatters', './chart'], function (qlik, const
 
 		// Generate gradient background if enabled
 		const gradientEnabled = layout.props.useGradient === true;
-		let containerBackgroundStyle = `background:${colors.backgroundColor};`;
+		const bgOpacityRaw = layout.props.backgroundOpacity;
+		const bgOpacity = (bgOpacityRaw === undefined || bgOpacityRaw === null || isNaN(bgOpacityRaw)) ? 1 : Math.max(0, Math.min(1, Number(bgOpacityRaw)));
+		let resolvedBackgroundColor = colors.backgroundColor;
+		if (bgOpacity < 1 && resolvedBackgroundColor && resolvedBackgroundColor !== 'transparent') {
+			resolvedBackgroundColor = hexToRgba(resolvedBackgroundColor, bgOpacity);
+		}
+		let containerBackgroundStyle = `background:${resolvedBackgroundColor};`;
 		if (gradientEnabled) {
 			let gradientStart = colors.gradientStart || layout.props.gradientStart || colors.backgroundColor;
 			let gradientEnd = colors.gradientEnd || layout.props.gradientEnd || colors.backgroundColor;
@@ -699,7 +953,12 @@ define(['qlik', './constants', './formatters', './chart'], function (qlik, const
 
 		// Generate status badge
 		const statusBadgeHtml = generateStatusBadgeHtml(layout, colors, fullRows, deltaData);
-		const chromeHtml = (statusBadgeHtml || quickButtonsHtml) ? `<div class="kpi-card__chrome" style="align-self:center;">${quickButtonsHtml}${statusBadgeHtml}</div>` : '';
+		const scopeBtnsHtml = scopeButtonsHtml || '';
+		// Chrome only carries scope buttons + status badge now; range chips have moved into the
+		// KPI value rows so they line up horizontally with the values they describe.
+		const chromeHtml = (statusBadgeHtml || quickButtonsHtml || scopeBtnsHtml)
+			? `<div class="kpi-card__chrome" style="display:flex !important;gap:6px !important;align-items:center !important;justify-content:flex-end !important;">${scopeBtnsHtml}${quickButtonsHtml}${statusBadgeHtml}</div>`
+			: '';
 
 		// Click interaction style
 		const qlikEditMode = (qlik && qlik.navigation && typeof qlik.navigation.getMode === 'function' && qlik.navigation.getMode() !== 'analysis');
@@ -749,6 +1008,8 @@ define(['qlik', './constants', './formatters', './chart'], function (qlik, const
 		generateLabelsHtml:       generateLabelsHtml,
 		generateSparklineHtml:    generateSparklineHtml,
 		generateQuickButtonsHtml: generateQuickButtonsHtml,
+		generateScopeButtonsHtml: generateScopeButtonsHtml,
+		generateSelectionChipHtml: generateSelectionChipHtml,
 		buildFinalHtml:           buildFinalHtml
 	};
 });

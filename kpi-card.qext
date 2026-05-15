@@ -1,6 +1,6 @@
 {
 	"name": "KPI Card",
-	"description": "Double-measure KPI with embedded sparkline trend",
+	"description": "Modern KPI card with sparkline trend, forecasting, calendar-aware delta, smart selection scopes, and portable presets",
 	"type": "visualization",
 	"version": "2.0.0",
 	"author": "f.arslan",

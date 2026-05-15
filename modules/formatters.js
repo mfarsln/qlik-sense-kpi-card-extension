@@ -30,6 +30,26 @@ define(['qlik', './constants'], function (qlik, constantsModule) {
 		}
 	}
 
+	function getScopeSessionKey(elementId) {
+		return 'kpi-card-scope-button-' + (elementId || 'default');
+	}
+
+	function saveSelectedScopeButton(elementId, buttonValue) {
+		try {
+			sessionStorage.setItem(getScopeSessionKey(elementId), buttonValue);
+		} catch (e) {
+			// Silently handle storage errors
+		}
+	}
+
+	function getSelectedScopeButton(elementId) {
+		try {
+			return sessionStorage.getItem(getScopeSessionKey(elementId));
+		} catch (e) {
+			return null;
+		}
+	}
+
 	// ── Markup Utilities ──────────────────────────────────────────────────────
 	function decodeCustomMarkup(markup) {
 		if (!markup) return '';
@@ -273,6 +293,9 @@ define(['qlik', './constants'], function (qlik, constantsModule) {
 		getSessionKey:              getSessionKey,
 		saveSelectedButton:         saveSelectedButton,
 		getSelectedButton:          getSelectedButton,
+		getScopeSessionKey:         getScopeSessionKey,
+		saveSelectedScopeButton:    saveSelectedScopeButton,
+		getSelectedScopeButton:     getSelectedScopeButton,
 		decodeCustomMarkup:         decodeCustomMarkup,
 		sanitizeSvgMarkup:          sanitizeSvgMarkup,
 		sanitizePresetProps:        sanitizePresetProps,
